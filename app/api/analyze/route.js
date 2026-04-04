@@ -39,11 +39,14 @@ Return your response in EXACTLY this format with these exact headings:
 [Answer: Is this contract safe? What happens if I cancel? Are there hidden charges?]
 
 ## RISK_SCORES
-FINANCIAL_RISK:[0-10]
-LEGAL_RISK:[0-10]
-PRIVACY_RISK:[0-10]
-OVERALL:[0-10]
+FINANCIAL_RISK:[number between 0 and 10]
+LEGAL_RISK:[number between 0 and 10]
+PRIVACY_RISK:[number between 0 and 10]
+OVERALL:[number between 0 and 10]
 CONTRACT_TYPE:[Rental/Freelance/Employment/Service/Loan/NDA/Other]
+
+IMPORTANT: For RISK_SCORES, output ONLY the number. Example: FINANCIAL_RISK:7 not FINANCIAL_RISK:[7]
+Each score MUST be different and accurately reflect the actual risk in that category.
 
 Contract to analyze:
 ${document}`;
@@ -56,9 +59,14 @@ ${document}`;
 
     const result = completion.choices[0].message.content;
 
+    console.log("AI Raw Output (last 300 chars):", result.slice(-300));
+
     const getScore = (label) => {
-      const match = result.match(new RegExp(`${label}:(\\d+)`));
-      return match ? parseInt(match[1]) : 5;
+      // Match both LABEL:7 and LABEL:[7] formats
+      const match = result.match(new RegExp(`${label}:\\[?(\\d+)\\]?`));
+      const score = match ? parseInt(match[1]) : 5;
+      console.log(`${label} = ${score}`);
+      return score;
     };
 
     const financialRisk = getScore("FINANCIAL_RISK");
