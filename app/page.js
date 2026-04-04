@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 const SAMPLE_CONTRACTS = {
   rental: {
@@ -20,7 +20,7 @@ TERMINATION: Either party can terminate this agreement with 2 months written not
 
 MAINTENANCE: Minor repairs up to Rs. 500 shall be the responsibility of the tenant. Major repairs shall be done by the landlord.
 
-RESTRICTIONS: The tenant shall not sublet the property. No pets allowed. No loud music after 10 PM.
+RESTRICTIONS: The tenant shall not sublet the property. No pets allowed. No loud music after 10 PM. The tenant cannot make any structural changes to the property.
 
 UTILITIES: Electricity, water, and maintenance charges shall be paid by the tenant separately.
 
@@ -39,17 +39,19 @@ PAYMENT: Total project cost is Rs. 1,20,000. Payment schedule:
 - Rs. 40,000 after first milestone approval
 - Rs. 40,000 after final delivery
 
-LATE PAYMENT: If client delays payment beyond 7 days, a penalty of 2% per week will be charged.
+LATE PAYMENT: If client delays payment beyond 7 days, a penalty of 2% per week will be charged on outstanding amount.
 
-CANCELLATION: If the client cancels the project after work has started, no refund will be given for work completed.
+CANCELLATION: If the client cancels the project after work has started, no refund will be given for work completed. The freelancer will retain all payments received.
 
-TIMELINE: The freelancer must complete the work within 60 days. Delay beyond 60 days will incur a penalty of Rs. 2,000 per day.
+TIMELINE: The freelancer must complete the work within 60 days. Delay beyond 60 days will incur a penalty of Rs. 2,000 per day unless delay is caused by client.
 
-OWNERSHIP: All code and designs become the sole property of the Client only after full payment is received.
+OWNERSHIP: All code, designs, and deliverables become the sole property of the Client only after full and final payment is received.
 
-NON-COMPETE: The Freelancer cannot work for any direct competitor of the Client for 2 years after this contract ends.
+NON-COMPETE: The Freelancer cannot work for any direct competitor of the Client for 2 years after this contract ends without written permission.
 
-CONFIDENTIALITY: The Freelancer cannot share any project details publicly or with third parties.
+CONFIDENTIALITY: The Freelancer cannot share any project details, code, or business information publicly or with third parties.
+
+REVISIONS: Up to 3 rounds of revisions are included. Additional revisions will be charged at Rs. 2,000 per hour.
 
 DISPUTES: All disputes will be resolved through arbitration in Mumbai, India.`
   },
@@ -57,41 +59,54 @@ DISPUTES: All disputes will be resolved through arbitration in Mumbai, India.`
     label: "💼 Job Offer Letter",
     text: `JOB OFFER LETTER
 
-Dear Candidate, We are pleased to offer you the position of Senior Software Engineer at InnovateTech Pvt Ltd.
+Dear Candidate,
+
+We are pleased to offer you the position of Senior Software Engineer at InnovateTech Pvt Ltd.
+
+POSITION: Senior Software Engineer
+DEPARTMENT: Technology and Product
+REPORTING TO: Chief Technology Officer
+START DATE: 1st May 2024
 
 SALARY: Your gross salary will be Rs. 18,00,000 per annum (Rs. 1,50,000 per month).
 
-PROBATION: You will be on probation for 6 months. During probation, either party can terminate with 7 days notice. After probation, 3 months notice is required.
+PROBATION: You will be on probation for 6 months. During probation, either party can terminate employment with 7 days notice. After probation, 3 months notice is required.
 
-WORKING HOURS: Standard working hours are 9 AM to 6 PM, Monday to Friday. You may be required to work extra hours or weekends without additional compensation.
+WORKING HOURS: Standard working hours are 9 AM to 6 PM, Monday to Friday. However, you may be required to work extra hours or weekends based on project requirements without additional compensation.
 
 BOND: You are required to serve the company for a minimum of 2 years. If you leave before 2 years, you must pay Rs. 3,00,000 as bond penalty.
 
-NON-COMPETE: For 1 year after leaving, you cannot join any direct competitor or start a competing business.
+NON-COMPETE: For 1 year after leaving the company, you cannot join any direct competitor or start a competing business.
 
-INTELLECTUAL PROPERTY: Any code or product developed during employment belongs entirely to the company, even if developed in personal time.
+INTELLECTUAL PROPERTY: Any code, product, or idea developed during employment belongs entirely to the company, even if developed in personal time.
 
-TERMINATION: The company reserves the right to terminate employment at any time for misconduct without notice.`
+CONFIDENTIALITY: You must not share any company information, client data, or trade secrets during or after employment.
+
+TERMINATION: The company reserves the right to terminate employment at any time for misconduct without notice or compensation.`
   },
   nda: {
     label: "🔒 NDA Agreement",
     text: `NON-DISCLOSURE AGREEMENT
 
-This NDA is entered into between Alpha Innovations Pvt Ltd (Disclosing Party) and the Receiving Party.
+This Non-Disclosure Agreement is entered into between Alpha Innovations Pvt Ltd (Disclosing Party) and the Receiving Party.
 
-CONFIDENTIAL INFORMATION: Includes all business plans, financial data, technical specifications, client lists, pricing strategies, and trade secrets.
+PURPOSE: The Disclosing Party wishes to share certain confidential business information for the purpose of evaluating a potential business partnership.
 
-OBLIGATIONS: The Receiving Party agrees to keep all confidential information strictly secret and not disclose to any third party.
+CONFIDENTIAL INFORMATION: Includes all business plans, financial data, technical specifications, client lists, pricing strategies, trade secrets, and any other proprietary information shared verbally or in writing.
 
-DURATION: This NDA is valid for 5 years from the date of signing.
+OBLIGATIONS: The Receiving Party agrees to keep all confidential information strictly secret, not disclose to any third party without written permission, use the information only for the stated purpose, and protect it with the same care as their own confidential information.
 
-PENALTIES: Breach of this agreement will result in compensation of Rs. 50,00,000 as liquidated damages.
+DURATION: This NDA is valid for 5 years from the date of signing. After expiry, certain trade secrets remain protected indefinitely.
+
+PENALTIES: Breach of this agreement will result in immediate legal action, compensation of Rs. 50,00,000 as liquidated damages, and injunctive relief without the need to prove actual damages.
+
+EXCEPTIONS: Information already in public domain or independently developed by the Receiving Party is excluded.
 
 RETURN OF INFORMATION: Upon request, all confidential documents must be returned or destroyed within 48 hours.
 
-NON-SOLICITATION: The Receiving Party shall not solicit or hire any employee of the Disclosing Party for 2 years.
+JURISDICTION: This agreement is governed by the laws of India. All disputes shall be resolved in courts of Bangalore, Karnataka.
 
-JURISDICTION: All disputes shall be resolved in courts of Bangalore, Karnataka.`
+NON-SOLICITATION: The Receiving Party shall not solicit or hire any employee of the Disclosing Party for 2 years.`
   },
   loan: {
     label: "🏦 Loan Agreement",
@@ -99,19 +114,23 @@ JURISDICTION: All disputes shall be resolved in courts of Bangalore, Karnataka.`
 
 This Loan Agreement is made between Sunrise Finance Pvt Ltd (Lender) and the Borrower.
 
-LOAN AMOUNT: Rs. 5,00,000 (Five Lakh Rupees).
+LOAN AMOUNT: The Lender agrees to provide a personal loan of Rs. 5,00,000 (Five Lakh Rupees).
 
-INTEREST RATE: 24% per annum (2% per month), calculated on reducing balance.
+INTEREST RATE: The loan carries an interest rate of 24% per annum (2% per month), calculated on reducing balance.
 
-REPAYMENT: 24 equal monthly installments (EMI) of Rs. 25,870 each.
+REPAYMENT: The loan must be repaid in 24 equal monthly installments of Rs. 25,870 each. First EMI is due 30 days from disbursement.
 
-LATE PAYMENT: Any EMI paid after due date attracts a penalty of 3% per month on overdue amount.
+LATE PAYMENT: Any EMI paid after the due date will attract a penalty of 3% per month on the overdue amount. Repeated defaults may result in legal action.
 
-PREPAYMENT: Allowed after 6 months with a prepayment penalty of 4% on outstanding principal.
+PREPAYMENT: Prepayment is allowed after 6 months with a prepayment penalty of 4% on the outstanding principal amount.
 
-DEFAULT: If the borrower defaults on 2 consecutive EMIs, the entire outstanding amount becomes immediately due.
+SECURITY: The borrower agrees to provide post-dated cheques for all EMIs. Bounced cheques will attract a penalty of Rs. 1,000 per bounce plus bank charges.
 
-PROCESSING FEE: Non-refundable processing fee of Rs. 10,000 deducted from loan amount before disbursement.
+DEFAULT: If the borrower defaults on 2 consecutive EMIs, the entire outstanding loan amount becomes immediately due and payable.
+
+PROCESSING FEE: A non-refundable processing fee of Rs. 10,000 will be deducted from the loan amount before disbursement.
+
+LEGAL ACTION: In case of default, the borrower is liable for all legal costs, collection charges, and court fees in addition to the outstanding amount.
 
 JURISDICTION: All disputes shall be settled in courts of Delhi, India only.`
   }
@@ -122,14 +141,6 @@ const CONTRACT_ICONS = {
   Service: "🤝", Loan: "🏦", Partnership: "🤲",
   NDA: "🔒", "Terms of Service": "📱", Other: "📄"
 };
-
-const SUGGESTED_QUESTIONS = [
-  "What happens if I miss a payment?",
-  "Can I cancel this contract early?",
-  "What are my main obligations?",
-  "Are there any hidden fees?",
-  "What is the notice period?",
-];
 
 export default function Home() {
   const [document, setDocument] = useState("");
@@ -142,25 +153,17 @@ export default function Home() {
   const [riskScore, setRiskScore] = useState(null);
   const [history, setHistory] = useState([]);
   const [showSamples, setShowSamples] = useState(false);
-  const [chatMessages, setChatMessages] = useState([]);
-  const [chatInput, setChatInput] = useState("");
-  const [chatLoading, setChatLoading] = useState(false);
-  const chatEndRef = useRef(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("legallens-history");
     if (saved) setHistory(JSON.parse(saved));
   }, []);
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages]);
-
   const saveToHistory = (doc, res, type, score, lang) => {
     const entry = {
       id: Date.now(),
       date: new Date().toLocaleDateString("en-IN"),
-      time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      time: new Date().toLocaleTimeString("en-IN", {hour:"2-digit", minute:"2-digit"}),
       preview: doc.slice(0, 70) + "...",
       result: res,
       contractType: type,
@@ -179,13 +182,12 @@ export default function Home() {
     setError("");
     setContractType(null);
     setRiskScore(null);
-    setChatMessages([]);
   };
 
   const analyzeDocument = async () => {
     if (!document.trim()) { setError("Please paste your legal document first."); return; }
     if (document.trim().length < 50) { setError("Document is too short."); return; }
-    setLoading(true); setError(""); setResult(""); setContractType(null); setRiskScore(null); setChatMessages([]);
+    setLoading(true); setError(""); setResult(""); setContractType(null); setRiskScore(null);
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
@@ -205,42 +207,10 @@ export default function Home() {
     finally { setLoading(false); }
   };
 
-  const sendChatMessage = async (questionOverride) => {
-    const question = questionOverride || chatInput.trim();
-    if (!question || chatLoading) return;
-    setChatInput("");
-    const newMessages = [...chatMessages, { role: "user", content: question }];
-    setChatMessages(newMessages);
-    setChatLoading(true);
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question,
-          contractText: document,
-          chatHistory: chatMessages,
-          language,
-        }),
-      });
-      const data = await res.json();
-      if (data.error) {
-        setChatMessages([...newMessages, { role: "assistant", content: "Sorry, something went wrong. Please try again." }]);
-      } else {
-        setChatMessages([...newMessages, { role: "assistant", content: data.answer }]);
-      }
-    } catch {
-      setChatMessages([...newMessages, { role: "assistant", content: "Network error. Please try again." }]);
-    } finally {
-      setChatLoading(false);
-    }
-  };
-
   const loadFromHistory = (item) => {
     setResult(item.result);
     setContractType(item.contractType);
     setRiskScore(item.riskScore);
-    setChatMessages([]);
     setActiveTab("result");
   };
 
@@ -299,18 +269,17 @@ export default function Home() {
   };
 
   const sections = [
-    { icon:"📋", title:"TL;DR — Quick Summary", heading:"TL;DR", border:"#3b82f6" },
+    { icon:"📋", title:"TL;DR", heading:"TL;DR", border:"#3b82f6" },
     { icon:"📝", title:"Detailed Summary", heading:"DETAILED SUMMARY", border:"#6366f1" },
-    { icon:"🔍", title:"Key Clauses Extracted", heading:"KEY CLAUSES", border:"#8b5cf6" },
+    { icon:"🔍", title:"Key Clauses", heading:"KEY CLAUSES", border:"#8b5cf6" },
     { icon:"⚠️", title:"Risks Identified", heading:"RISKS IDENTIFIED", border:"#ef4444" },
-    { icon:"🔄", title:"Plain Language Translation", heading:"SIMPLIFIED LANGUAGE", border:"#f59e0b" },
-    { icon:"💡", title:"Suggestions & Negotiation Tips", heading:"SUGGESTIONS", border:"#10b981" },
-    { icon:"❓", title:"Your Key Questions Answered", heading:"USER QUESTIONS", border:"#3b82f6" },
+    { icon:"🔄", title:"Plain Language", heading:"SIMPLIFIED LANGUAGE", border:"#f59e0b" },
+    { icon:"💡", title:"Suggestions", heading:"SUGGESTIONS", border:"#10b981" },
+    { icon:"❓", title:"Your Questions Answered", heading:"USER QUESTIONS", border:"#3b82f6" },
   ];
 
   return (
     <div style={{minHeight:"100vh",background:"#050914",color:"white",fontFamily:"'Segoe UI',sans-serif"}}>
-
       <div style={{position:"fixed",top:"-200px",left:"50%",transform:"translateX(-50%)",width:"800px",height:"400px",background:"radial-gradient(ellipse,rgba(59,130,246,0.08) 0%,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
 
       {/* Header */}
@@ -322,8 +291,7 @@ export default function Home() {
             <div style={{fontSize:"11px",color:"#6b7280"}}>AI Contract Analyzer · India Edition 🇮🇳</div>
           </div>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
-          <a href="/landing" style={{fontSize:"12px",color:"#6b7280",textDecoration:"none"}}>About</a>
+        <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
           <div style={{width:"8px",height:"8px",background:"#10b981",borderRadius:"50%"}}/>
           <span style={{fontSize:"12px",color:"#10b981",fontWeight:"600"}}>Live</span>
         </div>
@@ -376,6 +344,8 @@ export default function Home() {
         {activeTab==="input" && (
           <div>
             <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"16px",padding:"24px"}}>
+
+              {/* Language */}
               <div style={{marginBottom:"20px"}}>
                 <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>SELECT OUTPUT LANGUAGE</div>
                 <div style={{display:"flex",gap:"8px"}}>
@@ -387,16 +357,24 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* Sample Contracts */}
               <div style={{marginBottom:"20px"}}>
                 <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>📚 SAMPLE CONTRACTS LIBRARY</div>
-                <button onClick={() => setShowSamples(!showSamples)} style={{width:"100%",padding:"12px",borderRadius:"10px",border:"1px dashed #374151",background:"transparent",color:"#9ca3af",fontSize:"13px",fontWeight:"600",cursor:"pointer",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <button
+                  onClick={() => setShowSamples(!showSamples)}
+                  style={{width:"100%",padding:"12px 16px",borderRadius:"10px",border:"1px dashed #374151",background:"transparent",color:"#9ca3af",fontSize:"13px",fontWeight:"600",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}
+                >
                   <span>Try a sample contract to test LegalLens</span>
                   <span>{showSamples ? "▲" : "▼"}</span>
                 </button>
+
                 {showSamples && (
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:"8px",marginTop:"10px"}}>
                     {Object.entries(SAMPLE_CONTRACTS).map(([key, val]) => (
-                      <button key={key} onClick={() => loadSample(key)} style={{padding:"12px 16px",borderRadius:"10px",border:"1px solid #1f2937",background:"rgba(255,255,255,0.03)",color:"#d1d5db",fontSize:"13px",fontWeight:"600",cursor:"pointer",textAlign:"left"}}
+                      <button
+                        key={key}
+                        onClick={() => loadSample(key)}
+                        style={{padding:"12px 16px",borderRadius:"10px",border:"1px solid #1f2937",background:"rgba(255,255,255,0.03)",color:"#d1d5db",fontSize:"13px",fontWeight:"600",cursor:"pointer",textAlign:"left"}}
                         onMouseEnter={(e) => e.currentTarget.style.borderColor="#3b82f6"}
                         onMouseLeave={(e) => e.currentTarget.style.borderColor="#1f2937"}
                       >
@@ -407,12 +385,13 @@ export default function Home() {
                 )}
               </div>
 
+              {/* Textarea */}
               <div style={{marginBottom:"16px"}}>
                 <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>PASTE YOUR CONTRACT BELOW</div>
                 <textarea
                   value={document}
                   onChange={(e) => setDocument(e.target.value)}
-                  placeholder="Paste your rental agreement, job offer, freelance contract, or any legal document here..."
+                  placeholder="Paste your contract here or pick a sample above!"
                   style={{width:"100%",height:"300px",background:"rgba(0,0,0,0.3)",border:"1px solid #1f2937",borderRadius:"12px",padding:"16px",color:"white",fontSize:"14px",resize:"vertical",outline:"none",fontFamily:"inherit",lineHeight:"1.6",boxSizing:"border-box"}}
                   onFocus={(e) => e.target.style.borderColor="#3b82f6"}
                   onBlur={(e) => e.target.style.borderColor="#1f2937"}
@@ -424,7 +403,7 @@ export default function Home() {
                   {document.length} chars · {document.trim().split(/\s+/).filter(Boolean).length} words
                 </span>
                 <div style={{display:"flex",gap:"10px"}}>
-                  <button onClick={() => {setDocument("");setResult("");setError("");setContractType(null);setRiskScore(null);setChatMessages([]);}} style={{padding:"10px 20px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"13px",cursor:"pointer",fontWeight:"600"}}>
+                  <button onClick={() => {setDocument("");setResult("");setError("");setContractType(null);setRiskScore(null);}} style={{padding:"10px 20px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"13px",cursor:"pointer",fontWeight:"600"}}>
                     Clear
                   </button>
                   <button onClick={analyzeDocument} disabled={loading} style={{padding:"10px 28px",borderRadius:"8px",border:"none",background:loading?"#1f2937":"linear-gradient(135deg,#3b82f6,#6366f1)",color:loading?"#6b7280":"white",fontSize:"13px",fontWeight:"700",cursor:loading?"not-allowed":"pointer"}}>
@@ -453,7 +432,6 @@ export default function Home() {
         {/* RESULT TAB */}
         {activeTab==="result" && result && (
           <div>
-            {/* Contract Type + Risk Score */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"20px"}}>
               <div style={{background:"rgba(99,102,241,0.1)",border:"1px solid rgba(99,102,241,0.3)",borderRadius:"12px",padding:"16px",display:"flex",alignItems:"center",gap:"12px"}}>
                 <div style={{fontSize:"32px"}}>{CONTRACT_ICONS[contractType] || "📄"}</div>
@@ -476,7 +454,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div style={{display:"flex",justifyContent:"flex-end",gap:"8px",marginBottom:"20px"}}>
               <button onClick={() => navigator.clipboard.writeText(result)} style={{padding:"8px 14px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"12px",cursor:"pointer",fontWeight:"600"}}>
                 📋 Copy
@@ -489,7 +466,6 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Analysis Sections */}
             {sections.map((section, i) => (
               <div key={i} style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderLeft:`3px solid ${section.border}`,borderRadius:"12px",padding:"20px",marginBottom:"12px"}}>
                 <div style={{fontWeight:"700",fontSize:"15px",color:"#f9fafb",marginBottom:"12px",display:"flex",alignItems:"center",gap:"8px"}}>
@@ -500,72 +476,6 @@ export default function Home() {
                 </div>
               </div>
             ))}
-
-            {/* CHAT WITH CONTRACT */}
-            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(99,102,241,0.4)",borderLeft:"3px solid #6366f1",borderRadius:"12px",padding:"20px",marginTop:"24px"}}>
-              <div style={{fontWeight:"700",fontSize:"15px",color:"#f9fafb",marginBottom:"4px",display:"flex",alignItems:"center",gap:"8px"}}>
-                💬 Chat with this Contract
-              </div>
-              <p style={{fontSize:"12px",color:"#6b7280",marginBottom:"16px",marginTop:0}}>Ask any question about this contract and get an instant AI answer.</p>
-
-              {/* Suggested Questions */}
-              {chatMessages.length === 0 && (
-                <div style={{marginBottom:"16px"}}>
-                  <div style={{fontSize:"11px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"8px"}}>SUGGESTED QUESTIONS</div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:"8px"}}>
-                    {SUGGESTED_QUESTIONS.map((q, i) => (
-                      <button key={i} onClick={() => sendChatMessage(q)} style={{padding:"7px 14px",borderRadius:"20px",border:"1px solid #374151",background:"rgba(255,255,255,0.03)",color:"#9ca3af",fontSize:"12px",cursor:"pointer",fontWeight:"500"}}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor="#6366f1"; e.currentTarget.style.color="#a78bfa"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor="#374151"; e.currentTarget.style.color="#9ca3af"; }}
-                      >
-                        {q}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Chat Messages */}
-              {chatMessages.length > 0 && (
-                <div style={{maxHeight:"320px",overflowY:"auto",marginBottom:"16px",display:"flex",flexDirection:"column",gap:"12px"}}>
-                  {chatMessages.map((msg, i) => (
-                    <div key={i} style={{display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start"}}>
-                      <div style={{maxWidth:"80%",padding:"10px 14px",borderRadius:msg.role==="user"?"12px 12px 4px 12px":"12px 12px 12px 4px",background:msg.role==="user"?"linear-gradient(135deg,#3b82f6,#6366f1)":"rgba(255,255,255,0.05)",border:msg.role==="assistant"?"1px solid #1f2937":"none",fontSize:"13px",lineHeight:"1.6",color:msg.role==="user"?"white":"#d1d5db"}}>
-                        {msg.content}
-                      </div>
-                    </div>
-                  ))}
-                  {chatLoading && (
-                    <div style={{display:"flex",justifyContent:"flex-start"}}>
-                      <div style={{padding:"10px 14px",borderRadius:"12px 12px 12px 4px",background:"rgba(255,255,255,0.05)",border:"1px solid #1f2937",fontSize:"13px",color:"#6b7280"}}>
-                        Thinking...
-                      </div>
-                    </div>
-                  )}
-                  <div ref={chatEndRef}/>
-                </div>
-              )}
-
-              {/* Chat Input */}
-              <div style={{display:"flex",gap:"8px"}}>
-                <input
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => e.key==="Enter" && sendChatMessage()}
-                  placeholder="Ask anything about this contract..."
-                  style={{flex:1,background:"rgba(0,0,0,0.3)",border:"1px solid #1f2937",borderRadius:"10px",padding:"10px 14px",color:"white",fontSize:"13px",outline:"none",fontFamily:"inherit"}}
-                  onFocus={(e) => e.target.style.borderColor="#6366f1"}
-                  onBlur={(e) => e.target.style.borderColor="#1f2937"}
-                />
-                <button
-                  onClick={() => sendChatMessage()}
-                  disabled={chatLoading || !chatInput.trim()}
-                  style={{padding:"10px 20px",borderRadius:"10px",border:"none",background:chatLoading||!chatInput.trim()?"#1f2937":"linear-gradient(135deg,#6366f1,#8b5cf6)",color:chatLoading||!chatInput.trim()?"#6b7280":"white",fontSize:"13px",fontWeight:"700",cursor:chatLoading||!chatInput.trim()?"not-allowed":"pointer"}}
-                >
-                  Send
-                </button>
-              </div>
-            </div>
 
             <p style={{textAlign:"center",color:"#374151",fontSize:"12px",marginTop:"24px"}}>
               LegalLens is an AI tool. Always consult a real lawyer for critical decisions.
@@ -591,7 +501,7 @@ export default function Home() {
             ) : (
               <div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
-                  <span style={{color:"#6b7280",fontSize:"14px"}}>Last {history.length} analyses saved locally</span>
+                  <span style={{color:"#6b7280",fontSize:"14px"}}>Last {history.length} analyses</span>
                   <button onClick={clearHistory} style={{padding:"6px 14px",borderRadius:"8px",border:"1px solid rgba(239,68,68,0.4)",background:"rgba(239,68,68,0.1)",color:"#f87171",fontSize:"12px",cursor:"pointer",fontWeight:"600"}}>
                     🗑️ Clear All
                   </button>
@@ -624,7 +534,11 @@ export default function Home() {
         )}
 
       </div>
-      <style>{`* { box-sizing: border-box; } textarea::placeholder { color: #374151; } input::placeholder { color: #374151; }`}</style>
+
+      <style>{`
+        * { box-sizing: border-box; }
+        textarea::placeholder { color: #374151; }
+      `}</style>
     </div>
   );
 }
