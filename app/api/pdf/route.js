@@ -1,5 +1,3 @@
-import { NextRequest } from "next/server";
-
 export async function POST(request) {
   try {
     const formData = await request.formData();
@@ -10,10 +8,18 @@ export async function POST(request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const pdfParse = (await import("pdf-parse")).default;
+    const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default;
     const data = await pdfParse(buffer);
 
+    if (!data.text || data.text.trim().length < 50) {
+      return Response.json(
+        { error: "Could not read text from this PDF. Please copy-paste instead." },
+        { status: 400 }
+      );
+    }
+
     return Response.json({ text: data.text });
+
   } catch (error) {
     console.error("PDF Error:", error);
     return Response.json(
