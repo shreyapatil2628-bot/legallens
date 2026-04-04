@@ -4,88 +4,82 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const document = body.document;
-    const language = body.language || "English";
+    const { document, language } = await request.json();
 
     if (!document || document.trim().length < 50) {
-      return Response.json({ error: "Please provide a valid document." }, { status: 400 });
+      return Response.json({ error: "Document too short." }, { status: 400 });
     }
+
+    const prompt = `You are a legal contract analyzer for Indian contracts. Analyze this contract and respond in ${language}.
+
+Return your response in EXACTLY this format with these exact headings:
+
+## TL;DR
+[2-3 sentence plain summary of what this contract is about]
+
+## DETAILED SUMMARY
+[Detailed paragraph summary of all key terms]
+
+## KEY CLAUSES
+[List the most important clauses as bullet points]
+
+## RISKS IDENTIFIED
+[List each risk with severity tag]
+- [HIGH RISK] description
+- [MEDIUM RISK] description  
+- [LOW RISK] description
+
+## SIMPLIFIED LANGUAGE
+[Rewrite the most confusing parts in simple plain language]
+
+## SUGGESTIONS
+[List negotiation tips and what to ask for before signing]
+
+## USER QUESTIONS
+[Answer: Is this contract safe? What happens if I cancel? Are there hidden charges?]
+
+## RISK_SCORES
+FINANCIAL_RISK:[0-10]
+LEGAL_RISK:[0-10]
+PRIVACY_RISK:[0-10]
+OVERALL:[0-10]
+CONTRACT_TYPE:[Rental/Freelance/Employment/Service/Loan/NDA/Other]
+
+Contract to analyze:
+${document}`;
 
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       max_tokens: 2000,
-      messages: [
-        {
-          role: "system",
-          content: `You are an expert legal assistant.
-IMPORTANT: Always use these EXACT English headings. Write CONTENT in ${language} language.
-Use rupee symbol for all money amounts.
-
-## CONTRACT TYPE
-Detect the type and write ONLY one of these exact words: Rental, Freelance, Employment, Service, Loan, Partnership, NDA, Terms of Service, Other
-
-## TL;DR
-- point 1
-- point 2
-- point 3
-
-## DETAILED SUMMARY
-write summary here in ${language}
-
-## KEY CLAUSES
-Payment Terms: explain in ${language}
-Termination: explain in ${language}
-Liability: explain in ${language}
-Confidentiality: explain in ${language}
-Jurisdiction: explain in ${language}
-Other: explain in ${language}
-
-## RISKS IDENTIFIED
-- [HIGH RISK] explanation in ${language}
-- [MEDIUM RISK] explanation in ${language}
-- [LOW RISK] explanation in ${language}
-
-## SIMPLIFIED LANGUAGE
-rewrite complex parts in simple ${language}
-
-## SUGGESTIONS
-- tip 1 in ${language}
-- tip 2 in ${language}
-
-## USER QUESTIONS
-Can I exit easily? answer in ${language}
-Are there financial risks? answer in ${language}
-What are my obligations? answer in ${language}
-
-CRITICAL RULES:
-- Headings must ALWAYS be in English exactly as shown
-- Content must be in ${language} language
-- Use rupee symbol for money
-- Do not add extra headings`,
-        },
-        {
-          role: "user",
-          content: "Analyze this contract:\n\n" + document,
-        },
-      ],
+      messages: [{ role: "user", content: prompt }],
     });
 
     const result = completion.choices[0].message.content;
 
-    // Extract contract type
-    const typeMatch = result.match(/## CONTRACT TYPE\s*\n([^\n]+)/);
-    const contractType = typeMatch ? typeMatch[1].trim() : "Other";
+    const getScore = (label) => {
+      const match = result.match(new RegExp(`${label}:(\\d+)`));
+      return match ? parseInt(match[1]) : 5;
+    };
 
-    // Extract risk score based on HIGH RISK count
-    const highRisks = (result.match(/\[HIGH RISK\]/g) || []).length;
-    const mediumRisks = (result.match(/\[MEDIUM RISK\]/g) || []).length;
-    const riskScore = Math.min(10, highRisks * 3 + mediumRisks * 1 + 2);
+    const financialRisk = getScore("FINANCIAL_RISK");
+    const legalRisk = getScore("LEGAL_RISK");
+    const privacyRisk = getScore("PRIVACY_RISK");
+    const riskScore = getScore("OVERALL");
 
-    return Response.json({ result, contractType, riskScore });
+    const typeMatch = result.match(/CONTRACT_TYPE:(\w+)/);
+    const contractType = typeMatch ? typeMatch[1] : "Other";
+
+    return Response.json({
+      result,
+      riskScore,
+      financialRisk,
+      legalRisk,
+      privacyRisk,
+      contractType,
+    });
 
   } catch (error) {
-    console.error("ERROR:", error);
-    return Response.json({ error: error.message || "Something went wrong." }, { status: 500 });
+    console.error("Error:", error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }

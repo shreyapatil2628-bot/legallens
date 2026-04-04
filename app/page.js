@@ -124,10 +124,10 @@ const CONTRACT_ICONS = {
 };
 
 const SUGGESTED_QUESTIONS = [
-  "What happens if I miss a payment?",
-  "Can I cancel this contract early?",
+  "Is this contract safe?",
+  "What happens if I cancel?",
+  "Are there any hidden charges?",
   "What are my main obligations?",
-  "Are there any hidden fees?",
   "What is the notice period?",
 ];
 
@@ -140,6 +140,9 @@ export default function Home() {
   const [language, setLanguage] = useState("English");
   const [contractType, setContractType] = useState(null);
   const [riskScore, setRiskScore] = useState(null);
+  const [financialRisk, setFinancialRisk] = useState(null);
+  const [legalRisk, setLegalRisk] = useState(null);
+  const [privacyRisk, setPrivacyRisk] = useState(null);
   const [history, setHistory] = useState([]);
   const [showSamples, setShowSamples] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
@@ -156,7 +159,7 @@ export default function Home() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
-  const saveToHistory = (doc, res, type, score, lang) => {
+  const saveToHistory = (doc, res, type, score, lang, fin, leg, priv) => {
     const entry = {
       id: Date.now(),
       date: new Date().toLocaleDateString("en-IN"),
@@ -165,6 +168,9 @@ export default function Home() {
       result: res,
       contractType: type,
       riskScore: score,
+      financialRisk: fin,
+      legalRisk: leg,
+      privacyRisk: priv,
       language: lang,
     };
     const updated = [entry, ...history].slice(0, 10);
@@ -179,13 +185,18 @@ export default function Home() {
     setError("");
     setContractType(null);
     setRiskScore(null);
+    setFinancialRisk(null);
+    setLegalRisk(null);
+    setPrivacyRisk(null);
     setChatMessages([]);
   };
 
   const analyzeDocument = async () => {
     if (!document.trim()) { setError("Please paste your legal document first."); return; }
     if (document.trim().length < 50) { setError("Document is too short."); return; }
-    setLoading(true); setError(""); setResult(""); setContractType(null); setRiskScore(null); setChatMessages([]);
+    setLoading(true); setError(""); setResult(""); setContractType(null);
+    setRiskScore(null); setFinancialRisk(null); setLegalRisk(null); setPrivacyRisk(null);
+    setChatMessages([]);
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
@@ -198,7 +209,10 @@ export default function Home() {
         setResult(data.result);
         setContractType(data.contractType);
         setRiskScore(data.riskScore);
-        saveToHistory(document, data.result, data.contractType, data.riskScore, language);
+        setFinancialRisk(data.financialRisk);
+        setLegalRisk(data.legalRisk);
+        setPrivacyRisk(data.privacyRisk);
+        saveToHistory(document, data.result, data.contractType, data.riskScore, language, data.financialRisk, data.legalRisk, data.privacyRisk);
         setActiveTab("result");
       }
     } catch { setError("Network error. Please try again."); }
@@ -216,12 +230,7 @@ export default function Home() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question,
-          contractText: document,
-          chatHistory: chatMessages,
-          language,
-        }),
+        body: JSON.stringify({ question, contractText: document, chatHistory: chatMessages, language }),
       });
       const data = await res.json();
       if (data.error) {
@@ -240,6 +249,9 @@ export default function Home() {
     setResult(item.result);
     setContractType(item.contractType);
     setRiskScore(item.riskScore);
+    setFinancialRisk(item.financialRisk);
+    setLegalRisk(item.legalRisk);
+    setPrivacyRisk(item.privacyRisk);
     setChatMessages([]);
     setActiveTab("result");
   };
@@ -376,8 +388,6 @@ export default function Home() {
         {activeTab==="input" && (
           <div>
             <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"16px",padding:"24px"}}>
-
-              {/* Language */}
               <div style={{marginBottom:"20px"}}>
                 <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>SELECT OUTPUT LANGUAGE</div>
                 <div style={{display:"flex",gap:"8px"}}>
@@ -389,7 +399,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Sample Contracts */}
               <div style={{marginBottom:"20px"}}>
                 <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>📚 SAMPLE CONTRACTS LIBRARY</div>
                 <button onClick={() => setShowSamples(!showSamples)} style={{width:"100%",padding:"12px",borderRadius:"10px",border:"1px dashed #374151",background:"transparent",color:"#9ca3af",fontSize:"13px",fontWeight:"600",cursor:"pointer",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -410,7 +419,6 @@ export default function Home() {
                 )}
               </div>
 
-              {/* Textarea */}
               <div style={{marginBottom:"16px"}}>
                 <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>PASTE YOUR CONTRACT BELOW</div>
                 <textarea
@@ -428,7 +436,7 @@ export default function Home() {
                   {document.length} chars · {document.trim().split(/\s+/).filter(Boolean).length} words
                 </span>
                 <div style={{display:"flex",gap:"10px"}}>
-                  <button onClick={() => {setDocument("");setResult("");setError("");setContractType(null);setRiskScore(null);setChatMessages([]);}} style={{padding:"10px 20px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"13px",cursor:"pointer",fontWeight:"600"}}>
+                  <button onClick={() => {setDocument("");setResult("");setError("");setContractType(null);setRiskScore(null);setFinancialRisk(null);setLegalRisk(null);setPrivacyRisk(null);setChatMessages([]);}} style={{padding:"10px 20px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"13px",cursor:"pointer",fontWeight:"600"}}>
                     Clear
                   </button>
                   <button onClick={analyzeDocument} disabled={loading} style={{padding:"10px 28px",borderRadius:"8px",border:"none",background:loading?"#1f2937":"linear-gradient(135deg,#3b82f6,#6366f1)",color:loading?"#6b7280":"white",fontSize:"13px",fontWeight:"700",cursor:loading?"not-allowed":"pointer"}}>
@@ -457,7 +465,10 @@ export default function Home() {
         {/* RESULT TAB */}
         {activeTab==="result" && result && (
           <div>
+            {/* Contract Type + Risk Scores */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"20px"}}>
+
+              {/* Contract Type */}
               <div style={{background:"rgba(99,102,241,0.1)",border:"1px solid rgba(99,102,241,0.3)",borderRadius:"12px",padding:"16px",display:"flex",alignItems:"center",gap:"12px"}}>
                 <div style={{fontSize:"32px"}}>{CONTRACT_ICONS[contractType] || "📄"}</div>
                 <div>
@@ -465,8 +476,10 @@ export default function Home() {
                   <div style={{fontSize:"18px",fontWeight:"800",color:"#f9fafb"}}>{contractType || "Unknown"}</div>
                 </div>
               </div>
+
+              {/* Overall Risk */}
               <div style={{background:`rgba(${riskScore>=7?"239,68,68":riskScore>=4?"249,115,22":"16,185,129"},0.1)`,border:`1px solid rgba(${riskScore>=7?"239,68,68":riskScore>=4?"249,115,22":"16,185,129"},0.3)`,borderRadius:"12px",padding:"16px"}}>
-                <div style={{fontSize:"11px",color:getRiskColor(riskScore),fontWeight:"600",letterSpacing:"1px",marginBottom:"8px"}}>RISK SCORE</div>
+                <div style={{fontSize:"11px",color:getRiskColor(riskScore),fontWeight:"600",letterSpacing:"1px",marginBottom:"8px"}}>OVERALL RISK</div>
                 <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
                   <div style={{fontSize:"28px",fontWeight:"900",color:getRiskColor(riskScore)}}>{riskScore}/10</div>
                   <div style={{flex:1}}>
@@ -479,6 +492,34 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Risk Category Breakdown */}
+            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"12px",padding:"16px",marginBottom:"20px"}}>
+              <div style={{fontSize:"11px",color:"#9ca3af",fontWeight:"600",letterSpacing:"1px",marginBottom:"14px"}}>RISK BREAKDOWN BY CATEGORY</div>
+              {[
+                {label:"Financial Risk", icon:"💸", score:financialRisk, desc:"Hidden fees, penalties, payment terms"},
+                {label:"Legal Risk",     icon:"⚖️", score:legalRisk,     desc:"Termination, liability, disputes"},
+                {label:"Privacy Risk",  icon:"🔐", score:privacyRisk,   desc:"Data, confidentiality, IP ownership"},
+              ].map((cat,i) => (
+                <div key={i} style={{marginBottom: i < 2 ? "14px" : "0"}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"6px"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+                      <span style={{fontSize:"16px"}}>{cat.icon}</span>
+                      <span style={{fontSize:"13px",color:"#f9fafb",fontWeight:"600"}}>{cat.label}</span>
+                      <span style={{fontSize:"11px",color:"#4b5563"}}>{cat.desc}</span>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+                      <span style={{fontSize:"12px",fontWeight:"700",color:getRiskColor(cat.score)}}>{getRiskLabel(cat.score)}</span>
+                      <span style={{fontSize:"14px",fontWeight:"900",color:getRiskColor(cat.score)}}>{cat.score}/10</span>
+                    </div>
+                  </div>
+                  <div style={{width:"100%",background:"rgba(255,255,255,0.08)",borderRadius:"4px",height:"6px"}}>
+                    <div style={{width:`${(cat.score||0)*10}%`,background:getRiskColor(cat.score),borderRadius:"4px",height:"6px",transition:"width 1s ease"}}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Action Buttons */}
             <div style={{display:"flex",justifyContent:"flex-end",gap:"8px",marginBottom:"20px"}}>
               <button onClick={() => navigator.clipboard.writeText(result)} style={{padding:"8px 14px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"12px",cursor:"pointer",fontWeight:"600"}}>
                 📋 Copy
@@ -491,6 +532,7 @@ export default function Home() {
               </button>
             </div>
 
+            {/* Analysis Sections */}
             {sections.map((section, i) => (
               <div key={i} style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderLeft:`3px solid ${section.border}`,borderRadius:"12px",padding:"20px",marginBottom:"12px"}}>
                 <div style={{fontWeight:"700",fontSize:"15px",color:"#f9fafb",marginBottom:"12px",display:"flex",alignItems:"center",gap:"8px"}}>
