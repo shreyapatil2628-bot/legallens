@@ -404,6 +404,8 @@ export default function Home() {
   const [privacyRisk, setPrivacyRisk] = useState(null);
   const [history, setHistory] = useState([]);
   const [showSamples, setShowSamples] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -778,6 +780,63 @@ export default function Home() {
                   ))}
                 </div>
               </div>
+              {/* File Upload */}
+<div style={{marginBottom:"20px"}}>
+  <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>
+    📎 UPLOAD CONTRACT (PDF OR IMAGE)
+  </div>
+  <label style={{display:"flex",alignItems:"center",gap:"16px",background:"rgba(0,0,0,0.3)",border:"2px dashed #374151",borderRadius:"12px",padding:"20px",cursor:"pointer"}}
+    onMouseEnter={(e) => e.currentTarget.style.borderColor="#3b82f6"}
+    onMouseLeave={(e) => e.currentTarget.style.borderColor="#374151"}
+  >
+    <div style={{fontSize:"36px"}}>
+      {uploadLoading ? "⏳" : "📄"}
+    </div>
+    <div style={{flex:1}}>
+      <div style={{fontSize:"14px",fontWeight:"600",color:"#f9fafb",marginBottom:"4px"}}>
+        {uploadLoading ? "Reading your file..." : "📸 Click to upload Photo of Contract"}
+      </div>
+      <div style={{fontSize:"12px",color:"#6b7280"}}>
+        Take a clear photo of your contract and upload (JPG, PNG)
+      </div>
+      {uploadStatus && (
+        <div style={{fontSize:"12px",color:"#10b981",marginTop:"4px",fontWeight:"600"}}>
+          {uploadStatus}
+        </div>
+      )}
+    </div>
+    <input
+      type="file"
+      accept="image/*"
+      style={{display:"none"}}
+      disabled={uploadLoading}
+      onChange={async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setUploadLoading(true);
+        setUploadStatus("");
+        setError("");
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+          const res = await fetch("/api/pdf", { method: "POST", body: formData });
+          const data = await res.json();
+          if (data.error) {
+            setError(data.error);
+          } else {
+            setDocument(data.text);
+            setUploadStatus(`✅ ${data.type === "pdf" ? "PDF" : "Image"} read successfully! ${data.text.split(/\s+/).length} words extracted.`);
+          }
+        } catch {
+          setError("Failed to upload file. Please try again.");
+        } finally {
+          setUploadLoading(false);
+          e.target.value = "";
+        }
+      }}
+    />
+  </label>
+</div>
 
               <div style={{marginBottom:"20px"}}>
                 <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>📚 SAMPLE CONTRACTS LIBRARY</div>
