@@ -8,7 +8,7 @@ const SAMPLE_CONTRACTS = {
 
 This Rental Agreement is made between the Landlord (Mr. Ramesh Sharma) and the Tenant (Mr. Amit Kumar).
 
-PROPERTY: The landlord agrees to rent the property located at Flat No. 302, Sunshine Apartments, Andheri West, Mumbai - 400058.
+PROPERTY: Flat No. 302, Sunshine Apartments, Andheri West, Mumbai - 400058.
 
 RENT: The monthly rent is Rs. 25,000 per month. Rent is due on the 1st of every month. Late payment will attract a penalty of Rs. 500 per day.
 
@@ -16,7 +16,7 @@ SECURITY DEPOSIT: The tenant shall pay a security deposit of Rs. 75,000 which wi
 
 DURATION: This agreement is valid for 11 months starting from 1st April 2024. It will auto-renew unless either party gives 2 months written notice.
 
-TERMINATION: Either party can terminate this agreement with 2 months written notice. If tenant leaves before the agreement ends, the security deposit will be forfeited.
+TERMINATION: Either party can terminate with 2 months written notice. If tenant leaves before the agreement ends, the security deposit will be forfeited.
 
 MAINTENANCE: Minor repairs up to Rs. 500 shall be the responsibility of the tenant. Major repairs shall be done by the landlord.
 
@@ -41,13 +41,13 @@ PAYMENT: Total project cost is Rs. 1,20,000. Payment schedule:
 
 LATE PAYMENT: If client delays payment beyond 7 days, a penalty of 2% per week will be charged.
 
-CANCELLATION: If the client cancels the project after work has started, no refund will be given for work completed.
+CANCELLATION: If the client cancels after work has started, no refund will be given for work completed.
 
 TIMELINE: The freelancer must complete the work within 60 days. Delay beyond 60 days will incur a penalty of Rs. 2,000 per day.
 
 OWNERSHIP: All code and designs become the sole property of the Client only after full payment is received.
 
-NON-COMPETE: The Freelancer cannot work for any direct competitor of the Client for 2 years after this contract ends.
+NON-COMPETE: The Freelancer cannot work for any direct competitor for 2 years after this contract ends.
 
 CONFIDENTIALITY: The Freelancer cannot share any project details publicly or with third parties.
 
@@ -63,7 +63,7 @@ SALARY: Your gross salary will be Rs. 18,00,000 per annum (Rs. 1,50,000 per mont
 
 PROBATION: You will be on probation for 6 months. During probation, either party can terminate with 7 days notice. After probation, 3 months notice is required.
 
-WORKING HOURS: Standard working hours are 9 AM to 6 PM, Monday to Friday. You may be required to work extra hours or weekends without additional compensation.
+WORKING HOURS: 9 AM to 6 PM, Monday to Friday. You may be required to work extra hours or weekends without additional compensation.
 
 BOND: You are required to serve the company for a minimum of 2 years. If you leave before 2 years, you must pay Rs. 3,00,000 as bond penalty.
 
@@ -114,7 +114,268 @@ DEFAULT: If the borrower defaults on 2 consecutive EMIs, the entire outstanding 
 PROCESSING FEE: Non-refundable processing fee of Rs. 10,000 deducted from loan amount before disbursement.
 
 JURISDICTION: All disputes shall be settled in courts of Delhi, India only.`
-  }
+  },
+  internship: {
+    label: "🎓 Internship Agreement",
+    text: `INTERNSHIP AGREEMENT
+
+This Internship Agreement is made between InnovateTech Pvt Ltd (Company) and the Intern.
+
+POSITION: The Intern will work as a Software Development Intern in the Technology Department.
+
+DURATION: This internship is for 3 months starting from 1st May 2024 to 31st July 2024.
+
+STIPEND: The Intern will receive a monthly stipend of Rs. 8,000 per month. No other benefits will be provided.
+
+WORKING HOURS: The Intern must work 9 AM to 6 PM, Monday to Friday. More than 3 absences will result in stipend deduction.
+
+CONFIDENTIALITY: The Intern must not share any company data, code, or business strategies with anyone outside the company.
+
+INTELLECTUAL PROPERTY: All work created during the internship becomes the sole property of the Company.
+
+CERTIFICATE: A completion certificate will be issued only if the Intern completes the full duration with satisfactory performance.
+
+NON-COMPETE: The Intern cannot join any direct competitor for 6 months after the internship ends.
+
+TERMINATION: The Company can terminate this internship at any time without notice.
+
+DISPUTES: All disputes will be resolved in the courts of Pune, Maharashtra, India.`
+  },
+  vehicle: {
+    label: "🚗 Vehicle Sale Agreement",
+    text: `VEHICLE SALE AGREEMENT
+
+This Vehicle Sale Agreement is made between the Seller (Mr. Suresh Mehta) and the Buyer (Mr. Rahul Singh).
+
+VEHICLE DETAILS: Maruti Suzuki Swift VXI 2019, Registration Number MH 02 AB 1234, Pearl White.
+
+SALE PRICE: The agreed sale price is Rs. 4,50,000. Full payment must be made at the time of transfer.
+
+PAYMENT MODE: Payment must be made via bank transfer or demand draft only.
+
+AS-IS CONDITION: The vehicle is sold in its current condition. The Seller makes no warranties about mechanical condition.
+
+EXISTING DUES: The Seller confirms there are no outstanding loans, EMIs, or legal disputes on the vehicle.
+
+TRANSFER OF OWNERSHIP: The Seller will transfer the RC within 30 days of receiving full payment. Delay beyond 30 days attracts a penalty of Rs. 500 per day.
+
+LIABILITIES AFTER SALE: After the sale date, the Buyer is responsible for all challan, insurance, road tax, and legal matters.
+
+DISPUTES: All disputes will be resolved in the courts of Mumbai, Maharashtra, India.`
+  },
+  construction: {
+    label: "🏗️ Construction Contract",
+    text: `CONSTRUCTION CONTRACT
+
+This Construction Contract is made between the Client (Mr. Anil Desai) and the Contractor (BuildRight Construction Pvt Ltd).
+
+PROJECT: Construction of a 2BHK residential flat on Plot No. 45, Sector 12, Navi Mumbai.
+
+PROJECT COST: Total construction cost is Rs. 28,00,000. Payment schedule:
+- Rs. 5,00,000 advance before work begins
+- Rs. 8,00,000 after foundation completion
+- Rs. 8,00,000 after slab and walls completion
+- Rs. 5,00,000 after plastering and finishing
+- Rs. 2,00,000 after final handover
+
+PROJECT DURATION: Must be completed within 12 months. Delay attracts a penalty of Rs. 5,000 per day.
+
+MATERIALS: The Contractor will use approved grade materials only. Substandard materials will be replaced at the Contractor's cost.
+
+DEFECTS LIABILITY: Contractor responsible for fixing structural defects reported within 12 months of handover at no extra cost.
+
+TERMINATION: If the Contractor abandons the project, the Client can terminate and forfeit the advance.
+
+DISPUTES: All disputes will be resolved through arbitration in Mumbai, Maharashtra, India.`
+  },
+  investment: {
+    label: "💰 Investment Agreement",
+    text: `INVESTMENT AGREEMENT
+
+This Investment Agreement is made between the Investor (Ms. Priya Kapoor) and the Company (TechVenture Pvt Ltd).
+
+INVESTMENT AMOUNT: The Investor agrees to invest Rs. 25,00,000 in exchange for a 10% equity stake.
+
+VALUATION: Pre-money valuation of Rs. 2,50,00,000. Post-money valuation will be Rs. 2,75,00,000.
+
+USE OF FUNDS: Product development 40%, marketing 30%, team hiring 20%, operations 10%. Any deviation requires written approval.
+
+RETURNS: Returns only through equity appreciation or dividends. No fixed returns are guaranteed.
+
+LOCK-IN PERIOD: The Investor cannot sell or transfer equity for 2 years from the date of investment.
+
+INFORMATION RIGHTS: The Company must provide quarterly financial statements and annual audited reports to the Investor.
+
+EXIT RIGHTS: The Investor has the right to exit through secondary sale, buyback, or IPO after the lock-in period.
+
+CONFIDENTIALITY: Both parties must keep the terms strictly confidential without written consent.
+
+DISPUTES: All disputes will be resolved through arbitration under the Arbitration and Conciliation Act, 1996 in Mumbai, India.`
+  },
+  vendor: {
+    label: "🤝 Vendor Agreement",
+    text: `VENDOR SUPPLY AGREEMENT
+
+This Vendor Agreement is made between ABC Enterprises (Buyer) and XYZ Suppliers Pvt Ltd (Vendor).
+
+SCOPE: The Vendor agrees to supply office stationery, furniture, and IT equipment to the Buyer as per purchase orders raised from time to time.
+
+PRICING: Prices are fixed for 6 months from the agreement date. Any price revision requires 30 days written notice.
+
+PAYMENT TERMS: Payment will be made within 30 days of receiving invoice and delivery confirmation. Late payment attracts 1.5% interest per month.
+
+DELIVERY: The Vendor must deliver goods within 7 working days of receiving a purchase order. Delay beyond 7 days attracts a penalty of 2% of order value per week.
+
+QUALITY: All goods must meet the agreed specifications. Defective goods will be returned at the Vendor's cost and must be replaced within 3 days.
+
+EXCLUSIVITY: The Buyer is not bound to purchase exclusively from this Vendor.
+
+TERMINATION: Either party can terminate with 30 days written notice. The Buyer can terminate immediately for quality or delivery failures.
+
+CONFIDENTIALITY: The Vendor must not disclose the Buyer's pricing or business information to any third party.
+
+DISPUTES: All disputes will be resolved in the courts of Delhi, India.`
+  },
+  contractemployment: {
+    label: "🔁 Contract Employment",
+    text: `FIXED TERM CONTRACT EMPLOYMENT AGREEMENT
+
+This Contract Employment Agreement is made between DigiSoft Pvt Ltd (Employer) and the Employee.
+
+POSITION: The Employee is hired as a Senior Data Analyst on a fixed term contract basis.
+
+CONTRACT PERIOD: This contract is valid for 12 months from 1st June 2024 to 31st May 2025. This contract will NOT automatically renew unless a new written agreement is signed.
+
+SALARY: The Employee will receive a monthly salary of Rs. 75,000 per month. No annual increment is applicable during the contract period.
+
+LEAVE: The Employee is entitled to 12 paid leaves during the contract period. Unused leaves cannot be carried forward or encashed.
+
+NOTICE PERIOD: Either party must give 30 days written notice to terminate before the expiry date. If the Employee leaves without notice, 30 days salary will be deducted.
+
+NO BENEFITS: Being a contract employee, the Employee is NOT entitled to PF, gratuity, health insurance, or any other permanent employee benefits.
+
+EXTENSION: The Employer may extend this contract at its sole discretion. The Employee has no right to demand extension or permanent employment.
+
+CONFIDENTIALITY: The Employee must not share any company data or trade secrets during or after the contract period.
+
+INTELLECTUAL PROPERTY: All work produced during this contract belongs entirely to the Employer.
+
+DISPUTES: All disputes will be resolved in the courts of Bangalore, Karnataka, India.`
+  },
+  bonusagreement: {
+    label: "📊 Performance Bonus Agreement",
+    text: `PERFORMANCE BONUS AGREEMENT
+
+This Performance Bonus Agreement is made between FutureTech Pvt Ltd (Company) and the Employee (Mr. Rohit Sharma, Senior Sales Manager).
+
+BONUS STRUCTURE:
+- Achieving 80% of quarterly sales target: Rs. 25,000 bonus
+- Achieving 100% of quarterly sales target: Rs. 50,000 bonus
+- Achieving 120% or above of quarterly sales target: Rs. 80,000 bonus
+- No bonus will be paid if target achievement is below 80%
+
+TARGET SETTING: Sales targets will be set by the Management at the beginning of each quarter. Targets can be revised by the Company with 15 days notice.
+
+PAYMENT TIMING: Bonus will be calculated and paid within 45 days after the end of each quarter.
+
+DISCRETIONARY DEDUCTIONS: The Company reserves the right to reduce or cancel the bonus if the Employee violates company policies or causes financial loss.
+
+CLAWBACK: If incorrect sales data is discovered after bonus payment, the Company can recover the excess bonus from future salary.
+
+EMPLOYMENT CONDITION: Bonus will not be paid if the Employee resigns or is terminated before the payment date.
+
+NO GUARANTEE: This bonus scheme does not guarantee any minimum bonus amount. The Company reserves the right to modify or discontinue this scheme at any time.
+
+DISPUTES: All disputes will be resolved in the courts of Mumbai, Maharashtra, India.`
+  },
+  propertysale: {
+    label: "🏠 Property Sale Agreement",
+    text: `PROPERTY SALE AGREEMENT
+
+This Property Sale Agreement is made between the Seller (Mr. Vikram Nair) and the Buyer (Mr. Sunil Joshi).
+
+PROPERTY DETAILS: Residential flat No. 501, Tower B, Green Valley Apartments, Powai, Mumbai - 400076. Total area 1,050 sq ft.
+
+SALE PRICE: The agreed sale price is Rs. 1,25,00,000 (One Crore Twenty Five Lakh Rupees).
+
+PAYMENT SCHEDULE:
+- Rs. 12,50,000 token amount within 7 days of agreement
+- Rs. 37,50,000 within 30 days of agreement
+- Rs. 75,00,000 at the time of registration and possession
+
+TOKEN AMOUNT: The token amount of Rs. 12,50,000 is non-refundable if the Buyer backs out. If the Seller backs out, the token amount will be refunded double.
+
+POSSESSION DATE: The Seller will hand over vacant possession within 60 days of receiving full payment.
+
+CLEAR TITLE: The Seller confirms the property is free from all encumbrances, loans, disputes, and legal claims. If any hidden encumbrances are found later, the Seller will be fully responsible.
+
+REGISTRATION: Registration charges, stamp duty, and GST will be borne entirely by the Buyer.
+
+OUTSTANDING DUES: All outstanding society maintenance, property tax, electricity dues till the date of possession will be cleared by the Seller.
+
+DISPUTES: All disputes will be resolved in the courts of Mumbai, Maharashtra, India.`
+  },
+  carrental: {
+    label: "🚗 Car Rental Agreement",
+    text: `CAR RENTAL AGREEMENT
+
+This Car Rental Agreement is made between DriveEasy Car Rentals Pvt Ltd (Rental Company) and the Renter.
+
+VEHICLE: Honda City 2022, White, Registration Number MH 04 CD 5678.
+
+RENTAL PERIOD: From 1st June 2024 (10:00 AM) to 5th June 2024 (10:00 AM). Total 4 days.
+
+RENTAL CHARGES: Rs. 2,500 per day. Total rental amount Rs. 10,000. Security deposit Rs. 5,000 (refundable).
+
+FUEL POLICY: The vehicle will be provided with a full tank. The Renter must return the vehicle with a full tank. If not, fuel charges plus Rs. 500 service fee will be deducted from the deposit.
+
+LATE RETURN: Returning the vehicle after the agreed time will attract Rs. 500 per hour as late charges.
+
+DRIVER RESPONSIBILITY: The Renter must hold a valid driving license. The Renter is fully responsible for any traffic violations, challans, or fines during the rental period.
+
+DAMAGE POLICY: Any damage to the vehicle during the rental period is the Renter's full responsibility. Repair costs will be deducted from the security deposit. If costs exceed the deposit, the Renter must pay the difference.
+
+ACCIDENT: In case of accident, the Renter must immediately inform the Rental Company and file a police report. The Renter cannot make any repairs without prior approval.
+
+PROHIBITED USE: The vehicle cannot be used for racing, off-roading, transporting illegal goods, or driven outside the agreed state without written permission.
+
+RETURN CONDITION: The vehicle must be returned clean and in the same condition as provided.
+
+DISPUTES: All disputes will be resolved in the courts of Mumbai, Maharashtra, India.`
+  },
+  eventmanagement: {
+    label: "🌿 Event Management Contract",
+    text: `EVENT MANAGEMENT CONTRACT
+
+This Event Management Contract is made between StarEvents Pvt Ltd (Event Manager) and the Client (Mr. and Mrs. Kapoor).
+
+EVENT: Wedding Reception on 20th February 2025 at The Leela Palace, Mumbai. Expected guests: 500.
+
+SERVICES INCLUDED:
+- Venue decoration and floral arrangements
+- Catering for 500 guests (dinner buffet)
+- Sound system and DJ
+- Photography and videography coordination
+- Guest coordination and event anchoring
+- Lighting and stage setup
+
+TOTAL COST: Rs. 18,00,000 (Eighteen Lakh Rupees). Payment schedule:
+- Rs. 5,00,000 advance to confirm booking (non-refundable)
+- Rs. 8,00,000 one month before the event
+- Rs. 5,00,000 on the day of the event before setup begins
+
+CANCELLATION: If the Client cancels more than 30 days before the event, 50% of advance is refunded. Cancellation within 30 days results in full forfeiture of all payments made.
+
+POSTPONEMENT: Postponement requests must be made at least 45 days in advance. A postponement fee of Rs. 1,00,000 will be charged. Availability of vendors is not guaranteed.
+
+FORCE MAJEURE: The Event Manager is not responsible for delays or cancellations due to natural disasters, government orders, or circumstances beyond control.
+
+ADDITIONAL GUESTS: If guest count exceeds 500, additional catering charges of Rs. 2,500 per head will apply.
+
+DAMAGE: The Client is responsible for any damage caused by guests to the venue or equipment.
+
+DISPUTES: All disputes will be resolved in the courts of Mumbai, Maharashtra, India.`
+  },
 };
 
 const CONTRACT_ICONS = {
