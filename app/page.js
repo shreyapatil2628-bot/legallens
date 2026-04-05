@@ -307,7 +307,7 @@ TOKEN AMOUNT: The token amount of Rs. 12,50,000 is non-refundable if the Buyer b
 
 POSSESSION DATE: The Seller will hand over vacant possession within 60 days of receiving full payment.
 
-CLEAR TITLE: The Seller confirms the property is free from all encumbrances, loans, disputes, and legal claims. If any hidden encumbrances are found later, the Seller will be fully responsible.
+CLEAR TITLE: The Seller confirms the property is free from all encumbrances, loans, disputes, and legal claims.
 
 REGISTRATION: Registration charges, stamp duty, and GST will be borne entirely by the Buyer.
 
@@ -333,9 +333,9 @@ LATE RETURN: Returning the vehicle after the agreed time will attract Rs. 500 pe
 
 DRIVER RESPONSIBILITY: The Renter must hold a valid driving license. The Renter is fully responsible for any traffic violations, challans, or fines during the rental period.
 
-DAMAGE POLICY: Any damage to the vehicle during the rental period is the Renter's full responsibility. Repair costs will be deducted from the security deposit. If costs exceed the deposit, the Renter must pay the difference.
+DAMAGE POLICY: Any damage to the vehicle during the rental period is the Renter's full responsibility. Repair costs will be deducted from the security deposit.
 
-ACCIDENT: In case of accident, the Renter must immediately inform the Rental Company and file a police report. The Renter cannot make any repairs without prior approval.
+ACCIDENT: In case of accident, the Renter must immediately inform the Rental Company and file a police report.
 
 PROHIBITED USE: The vehicle cannot be used for racing, off-roading, transporting illegal goods, or driven outside the agreed state without written permission.
 
@@ -359,20 +359,18 @@ SERVICES INCLUDED:
 - Guest coordination and event anchoring
 - Lighting and stage setup
 
-TOTAL COST: Rs. 18,00,000 (Eighteen Lakh Rupees). Payment schedule:
+TOTAL COST: Rs. 18,00,000. Payment schedule:
 - Rs. 5,00,000 advance to confirm booking (non-refundable)
 - Rs. 8,00,000 one month before the event
 - Rs. 5,00,000 on the day of the event before setup begins
 
 CANCELLATION: If the Client cancels more than 30 days before the event, 50% of advance is refunded. Cancellation within 30 days results in full forfeiture of all payments made.
 
-POSTPONEMENT: Postponement requests must be made at least 45 days in advance. A postponement fee of Rs. 1,00,000 will be charged. Availability of vendors is not guaranteed.
+POSTPONEMENT: Postponement requests must be made at least 45 days in advance. A postponement fee of Rs. 1,00,000 will be charged.
 
 FORCE MAJEURE: The Event Manager is not responsible for delays or cancellations due to natural disasters, government orders, or circumstances beyond control.
 
 ADDITIONAL GUESTS: If guest count exceeds 500, additional catering charges of Rs. 2,500 per head will apply.
-
-DAMAGE: The Client is responsible for any damage caused by guests to the venue or equipment.
 
 DISPUTES: All disputes will be resolved in the courts of Mumbai, Maharashtra, India.`
   },
@@ -410,6 +408,7 @@ export default function Home() {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const [contract1, setContract1] = useState("");
   const [contract2, setContract2] = useState("");
@@ -429,6 +428,16 @@ export default function Home() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
+
+  // ✅ FIXED: Show disclaimer EVERY time the page loads
+  useEffect(() => {
+    setShowDisclaimer(true);
+  }, []);
+
+  // ✅ FIXED: No localStorage — just close the popup
+  const acceptDisclaimer = () => {
+    setShowDisclaimer(false);
+  };
 
   const saveToHistory = (doc, res, type, score, lang, fin, leg, priv) => {
     const entry = {
@@ -673,6 +682,25 @@ export default function Home() {
 
   return (
     <div style={{minHeight:"100vh",background:"#050914",color:"white",fontFamily:"'Segoe UI',sans-serif"}}>
+
+      {/* ── DISCLAIMER MODAL — shows every visit ── */}
+      {showDisclaimer && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:"24px"}}>
+          <div style={{background:"#0d1117",border:"1px solid #1f2937",borderRadius:"20px",padding:"40px",maxWidth:"480px",width:"100%",textAlign:"center"}}>
+            <div style={{width:"64px",height:"64px",background:"linear-gradient(135deg,#3b82f6,#6366f1)",borderRadius:"16px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"32px",margin:"0 auto 24px"}}>⚖️</div>
+            <div style={{display:"inline-block",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:"20px",padding:"4px 14px",fontSize:"11px",color:"#f87171",fontWeight:"700",letterSpacing:"1px",marginBottom:"16px"}}>IMPORTANT DISCLAIMER</div>
+            <h2 style={{fontSize:"22px",fontWeight:"900",color:"#f9fafb",marginBottom:"16px",letterSpacing:"-0.5px"}}>LegalLens is an AI Tool</h2>
+            <p style={{color:"#9ca3af",fontSize:"14px",lineHeight:"1.8",marginBottom:"24px"}}>
+              LegalLens uses AI to help you understand legal contracts faster. It is <strong style={{color:"#f9fafb"}}>not a substitute for professional legal advice.</strong> Always consult a qualified lawyer before signing any important document.
+            </p>
+            <button onClick={acceptDisclaimer} style={{width:"100%",padding:"14px",borderRadius:"10px",border:"none",background:"linear-gradient(135deg,#3b82f6,#6366f1)",color:"white",fontSize:"15px",fontWeight:"700",cursor:"pointer"}}>
+              ✅ I Understand — Continue to LegalLens
+            </button>
+            <p style={{color:"#374151",fontSize:"11px",marginTop:"12px"}}>This disclaimer appears every visit for your awareness.</p>
+          </div>
+        </div>
+      )}
+
       <div style={{position:"fixed",top:"-200px",left:"50%",transform:"translateX(-50%)",width:"800px",height:"400px",background:"radial-gradient(ellipse,rgba(59,130,246,0.08) 0%,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
 
       {/* Header */}
@@ -685,6 +713,7 @@ export default function Home() {
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
+          <button onClick={() => setShowDisclaimer(true)} style={{fontSize:"12px",color:"#6b7280",background:"none",border:"none",cursor:"pointer"}}>⚠️ Disclaimer</button>
           <a href="/landing" style={{fontSize:"12px",color:"#6b7280",textDecoration:"none"}}>About</a>
           <div style={{width:"8px",height:"8px",background:"#10b981",borderRadius:"50%"}}/>
           <span style={{fontSize:"12px",color:"#10b981",fontWeight:"600"}}>Live</span>
@@ -816,7 +845,6 @@ export default function Home() {
             </div>
 
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px",marginBottom:"16px"}}>
-              {/* Contract A */}
               <div style={{background:"rgba(59,130,246,0.05)",border:"1px solid rgba(59,130,246,0.3)",borderRadius:"16px",padding:"20px"}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"12px"}}>
                   <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
@@ -845,7 +873,6 @@ export default function Home() {
                 <div style={{fontSize:"11px",color:"#4b5563",marginTop:"6px"}}>{contract1.trim().split(/\s+/).filter(Boolean).length} words</div>
               </div>
 
-              {/* Contract B */}
               <div style={{background:"rgba(139,92,246,0.05)",border:"1px solid rgba(139,92,246,0.3)",borderRadius:"16px",padding:"20px"}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"12px"}}>
                   <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
@@ -893,18 +920,14 @@ export default function Home() {
 
             {compareResult && !compareLoading && (
               <div>
-                {/* Winner banner */}
                 <div style={{background:compareResult.winner==="CONTRACT_A"?"rgba(59,130,246,0.12)":compareResult.winner==="CONTRACT_B"?"rgba(139,92,246,0.12)":"rgba(16,185,129,0.12)",border:`1px solid ${compareResult.winner==="CONTRACT_A"?"rgba(59,130,246,0.5)":compareResult.winner==="CONTRACT_B"?"rgba(139,92,246,0.5)":"rgba(16,185,129,0.5)"}`,borderRadius:"16px",padding:"24px",marginBottom:"16px",textAlign:"center"}}>
                   <div style={{fontSize:"13px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"8px"}}>VERDICT</div>
                   <div style={{fontSize:"28px",fontWeight:"900",color:compareResult.winner==="CONTRACT_A"?"#60a5fa":compareResult.winner==="CONTRACT_B"?"#a78bfa":"#10b981",marginBottom:"10px"}}>
                     {compareResult.winner==="CONTRACT_A"?"✅ Contract A is Safer":compareResult.winner==="CONTRACT_B"?"✅ Contract B is Safer":"🤝 Both are Equal"}
                   </div>
-                  <div style={{color:"#9ca3af",fontSize:"14px",maxWidth:"600px",margin:"0 auto"}}>
-                    {parseSection(compareResult.result,"VERDICT")}
-                  </div>
+                  <div style={{color:"#9ca3af",fontSize:"14px",maxWidth:"600px",margin:"0 auto"}}>{parseSection(compareResult.result,"VERDICT")}</div>
                 </div>
 
-                {/* Score cards — lower = safer */}
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"16px"}}>
                   {[
                     {label:"Contract A", score:compareResult.scoreA, color:"#60a5fa", bg:"rgba(59,130,246,0.1)", border:"rgba(59,130,246,0.3)", winner:compareResult.winner==="CONTRACT_A"},
@@ -923,7 +946,6 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Key differences */}
                 <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"12px",padding:"20px",marginBottom:"16px"}}>
                   <div style={{fontSize:"13px",fontWeight:"700",color:"#f9fafb",marginBottom:"14px"}}>🔄 Key Differences</div>
                   {parseDifferences(compareResult.result).map((diff,i,arr) => (
@@ -949,7 +971,6 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Risks side by side */}
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"16px"}}>
                   {[
                     {label:"Contract A — Risks", key:"CONTRACT_A_RISKS", color:"#f87171"},
@@ -962,7 +983,6 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Advantages side by side */}
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"16px"}}>
                   {[
                     {label:"Contract A — Advantages", key:"CONTRACT_A_ADVANTAGES"},
@@ -975,12 +995,10 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Recommendation */}
                 <div style={{background:"rgba(59,130,246,0.08)",border:"1px solid rgba(59,130,246,0.3)",borderLeft:"3px solid #3b82f6",borderRadius:"12px",padding:"20px"}}>
                   <div style={{fontSize:"13px",fontWeight:"700",color:"#f9fafb",marginBottom:"10px"}}>💡 Final Recommendation</div>
                   <div style={{color:"#d1d5db",fontSize:"14px",lineHeight:"1.7"}}>{parseSection(compareResult.result,"RECOMMENDATION")}</div>
                 </div>
-
                 <p style={{textAlign:"center",color:"#374151",fontSize:"12px",marginTop:"24px"}}>LegalLens is an AI tool. Always consult a real lawyer for critical decisions.</p>
               </div>
             )}
@@ -1055,7 +1073,6 @@ export default function Home() {
               </div>
             ))}
 
-            {/* Chat */}
             <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(99,102,241,0.4)",borderLeft:"3px solid #6366f1",borderRadius:"12px",padding:"20px",marginTop:"24px"}}>
               <div style={{fontWeight:"700",fontSize:"15px",color:"#f9fafb",marginBottom:"4px"}}>💬 Chat with this Contract</div>
               <p style={{fontSize:"12px",color:"#6b7280",marginBottom:"16px",marginTop:0}}>Ask any question about this contract and get an instant AI answer.</p>
