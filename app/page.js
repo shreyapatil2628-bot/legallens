@@ -148,6 +148,16 @@ export default function Home() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  const [contract1, setContract1] = useState("");
+  const [contract2, setContract2] = useState("");
+  const [compareResult, setCompareResult] = useState(null);
+  const [compareLoading, setCompareLoading] = useState(false);
+  const [compareError, setCompareError] = useState("");
+  const [showSamples1, setShowSamples1] = useState(false);
+  const [showSamples2, setShowSamples2] = useState(false);
+
   const chatEndRef = useRef(null);
 
   useEffect(() => {
@@ -219,6 +229,23 @@ export default function Home() {
     finally { setLoading(false); }
   };
 
+  const compareContracts = async () => {
+    if (!contract1.trim() || contract1.trim().length < 50) { setCompareError("Contract A is too short."); return; }
+    if (!contract2.trim() || contract2.trim().length < 50) { setCompareError("Contract B is too short."); return; }
+    setCompareLoading(true); setCompareError(""); setCompareResult(null);
+    try {
+      const res = await fetch("/api/compare", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contract1, contract2, language }),
+      });
+      const data = await res.json();
+      if (data.error) setCompareError(data.error);
+      else setCompareResult(data);
+    } catch { setCompareError("Network error. Please try again."); }
+    finally { setCompareLoading(false); }
+  };
+
   const sendChatMessage = async (questionOverride) => {
     const question = questionOverride || chatInput.trim();
     if (!question || chatLoading) return;
@@ -261,6 +288,12 @@ export default function Home() {
     localStorage.removeItem("legallens-history");
   };
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(result)
+      .then(() => { setCopySuccess(true); setTimeout(() => setCopySuccess(false), 2000); })
+      .catch(() => alert("Copy failed — please select the text manually."));
+  };
+
   const parseSection = (text, heading) => {
     const regex = new RegExp(`## ${heading}([\\s\\S]*?)(?=## |$)`);
     const match = text.match(regex);
@@ -298,6 +331,49 @@ export default function Home() {
     });
   };
 
+  const formatCompareLines = (text) => {
+    if (!text) return null;
+    return text.split("\n").map((line, i) => {
+      if (line.includes("[HIGH RISK]")) return (
+        <div key={i} style={{display:"flex",alignItems:"flex-start",gap:"8px",marginBottom:"8px"}}>
+          <span style={{background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.4)",color:"#f87171",fontSize:"11px",fontWeight:"700",padding:"2px 8px",borderRadius:"20px",whiteSpace:"nowrap"}}>🔴 HIGH</span>
+          <span style={{color:"#d1d5db",fontSize:"13px"}}>{line.replace(/- \[HIGH RISK\]/,"").trim()}</span>
+        </div>
+      );
+      if (line.includes("[MEDIUM RISK]")) return (
+        <div key={i} style={{display:"flex",alignItems:"flex-start",gap:"8px",marginBottom:"8px"}}>
+          <span style={{background:"rgba(249,115,22,0.15)",border:"1px solid rgba(249,115,22,0.4)",color:"#fb923c",fontSize:"11px",fontWeight:"700",padding:"2px 8px",borderRadius:"20px",whiteSpace:"nowrap"}}>🟠 MED</span>
+          <span style={{color:"#d1d5db",fontSize:"13px"}}>{line.replace(/- \[MEDIUM RISK\]/,"").trim()}</span>
+        </div>
+      );
+      if (line.includes("[LOW RISK]")) return (
+        <div key={i} style={{display:"flex",alignItems:"flex-start",gap:"8px",marginBottom:"8px"}}>
+          <span style={{background:"rgba(234,179,8,0.15)",border:"1px solid rgba(234,179,8,0.4)",color:"#facc15",fontSize:"11px",fontWeight:"700",padding:"2px 8px",borderRadius:"20px",whiteSpace:"nowrap"}}>🟡 LOW</span>
+          <span style={{color:"#d1d5db",fontSize:"13px"}}>{line.replace(/- \[LOW RISK\]/,"").trim()}</span>
+        </div>
+      );
+      if (line.startsWith("- ")) return <li key={i} style={{marginLeft:"16px",marginBottom:"6px",color:"#d1d5db",fontSize:"13px"}}>{line.slice(2)}</li>;
+      if (line.trim()==="") return null;
+      return <p key={i} style={{marginBottom:"6px",color:"#d1d5db",fontSize:"13px"}}>{line}</p>;
+    });
+  };
+
+  const parseDifferences = (text) => {
+    const section = parseSection(text, "KEY_DIFFERENCES");
+    if (!section) return [];
+    return section.split("\n").filter(l => l.startsWith("- ")).map(line => {
+      const clean = line.slice(2);
+      const topicMatch = clean.match(/^\[(.+?)\]:/);
+      const topic = topicMatch ? topicMatch[1] : "Clause";
+      const rest = clean.replace(/^\[.+?\]:/, "").trim();
+      const parts = rest.split("|");
+      const aText = parts[0] ? parts[0].replace("Contract A says","").trim() : "";
+      const bText = parts[1] ? parts[1].replace("Contract B says","").trim() : "";
+      const winnerText = parts[2] ? parts[2].replace("Winner:","").trim() : "Equal";
+      return { topic, aText, bText, winnerText };
+    });
+  };
+
   const getRiskColor = (score) => {
     if (score >= 7) return "#ef4444";
     if (score >= 4) return "#f97316";
@@ -308,6 +384,20 @@ export default function Home() {
     if (score >= 7) return "HIGH RISK";
     if (score >= 4) return "MEDIUM RISK";
     return "LOW RISK";
+  };
+
+  const getSafetyLabel = (score) => {
+    if (score <= 3) return "VERY SAFE";
+    if (score <= 5) return "MODERATE";
+    if (score <= 7) return "RISKY";
+    return "DANGEROUS";
+  };
+
+  const getSafetyColor = (score) => {
+    if (score <= 3) return "#10b981";
+    if (score <= 5) return "#f97316";
+    if (score <= 7) return "#ef4444";
+    return "#dc2626";
   };
 
   const sections = [
@@ -322,7 +412,6 @@ export default function Home() {
 
   return (
     <div style={{minHeight:"100vh",background:"#050914",color:"white",fontFamily:"'Segoe UI',sans-serif"}}>
-
       <div style={{position:"fixed",top:"-200px",left:"50%",transform:"translateX(-50%)",width:"800px",height:"400px",background:"radial-gradient(ellipse,rgba(59,130,246,0.08) 0%,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
 
       {/* Header */}
@@ -374,8 +463,9 @@ export default function Home() {
         {/* Tabs */}
         <div style={{display:"flex",gap:"4px",marginBottom:"24px",background:"rgba(255,255,255,0.03)",border:"1px solid #1f2937",borderRadius:"12px",padding:"4px"}}>
           {[
-            {key:"input", label:"📄 Input"},
-            {key:"result", label:"📊 Analysis"},
+            {key:"input",   label:"📄 Analyze"},
+            {key:"compare", label:"⚖️ Compare"},
+            {key:"result",  label:"📊 Analysis"},
             {key:"history", label:`🕐 History (${history.length})`},
           ].map((tab) => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{flex:1,padding:"10px",borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"13px",fontWeight:"600",transition:"all 0.2s",background:activeTab===tab.key?"linear-gradient(135deg,#3b82f6,#6366f1)":"transparent",color:activeTab===tab.key?"white":"#6b7280"}}>
@@ -384,7 +474,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* INPUT TAB */}
+        {/* ── ANALYZE TAB ── */}
         {activeTab==="input" && (
           <div>
             <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"16px",padding:"24px"}}>
@@ -403,17 +493,15 @@ export default function Home() {
                 <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>📚 SAMPLE CONTRACTS LIBRARY</div>
                 <button onClick={() => setShowSamples(!showSamples)} style={{width:"100%",padding:"12px",borderRadius:"10px",border:"1px dashed #374151",background:"transparent",color:"#9ca3af",fontSize:"13px",fontWeight:"600",cursor:"pointer",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <span>Try a sample contract to test LegalLens</span>
-                  <span>{showSamples ? "▲" : "▼"}</span>
+                  <span>{showSamples?"▲":"▼"}</span>
                 </button>
                 {showSamples && (
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:"8px",marginTop:"10px"}}>
-                    {Object.entries(SAMPLE_CONTRACTS).map(([key, val]) => (
+                    {Object.entries(SAMPLE_CONTRACTS).map(([key,val]) => (
                       <button key={key} onClick={() => loadSample(key)} style={{padding:"12px 16px",borderRadius:"10px",border:"1px solid #1f2937",background:"rgba(255,255,255,0.03)",color:"#d1d5db",fontSize:"13px",fontWeight:"600",cursor:"pointer",textAlign:"left"}}
                         onMouseEnter={(e) => e.currentTarget.style.borderColor="#3b82f6"}
                         onMouseLeave={(e) => e.currentTarget.style.borderColor="#1f2937"}
-                      >
-                        {val.label}
-                      </button>
+                      >{val.label}</button>
                     ))}
                   </div>
                 )}
@@ -421,9 +509,7 @@ export default function Home() {
 
               <div style={{marginBottom:"16px"}}>
                 <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>PASTE YOUR CONTRACT BELOW</div>
-                <textarea
-                  value={document}
-                  onChange={(e) => setDocument(e.target.value)}
+                <textarea value={document} onChange={(e) => setDocument(e.target.value)}
                   placeholder="Paste your rental agreement, job offer, freelance contract, or any legal document here..."
                   style={{width:"100%",height:"300px",background:"rgba(0,0,0,0.3)",border:"1px solid #1f2937",borderRadius:"12px",padding:"16px",color:"white",fontSize:"14px",resize:"vertical",outline:"none",fontFamily:"inherit",lineHeight:"1.6",boxSizing:"border-box"}}
                   onFocus={(e) => e.target.style.borderColor="#3b82f6"}
@@ -432,25 +518,17 @@ export default function Home() {
               </div>
 
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span style={{fontSize:"12px",color:"#4b5563"}}>
-                  {document.length} chars · {document.trim().split(/\s+/).filter(Boolean).length} words
-                </span>
+                <span style={{fontSize:"12px",color:"#4b5563"}}>{document.length} chars · {document.trim().split(/\s+/).filter(Boolean).length} words</span>
                 <div style={{display:"flex",gap:"10px"}}>
-                  <button onClick={() => {setDocument("");setResult("");setError("");setContractType(null);setRiskScore(null);setFinancialRisk(null);setLegalRisk(null);setPrivacyRisk(null);setChatMessages([]);}} style={{padding:"10px 20px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"13px",cursor:"pointer",fontWeight:"600"}}>
-                    Clear
-                  </button>
+                  <button onClick={() => {setDocument("");setResult("");setError("");setContractType(null);setRiskScore(null);setFinancialRisk(null);setLegalRisk(null);setPrivacyRisk(null);setChatMessages([]);}} style={{padding:"10px 20px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"13px",cursor:"pointer",fontWeight:"600"}}>Clear</button>
                   <button onClick={analyzeDocument} disabled={loading} style={{padding:"10px 28px",borderRadius:"8px",border:"none",background:loading?"#1f2937":"linear-gradient(135deg,#3b82f6,#6366f1)",color:loading?"#6b7280":"white",fontSize:"13px",fontWeight:"700",cursor:loading?"not-allowed":"pointer"}}>
-                    {loading ? "Analyzing..." : "Analyze Now"}
+                    {loading?"Analyzing...":"Analyze Now"}
                   </button>
                 </div>
               </div>
             </div>
 
-            {error && (
-              <div style={{marginTop:"16px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:"12px",padding:"14px 18px",color:"#fca5a5",fontSize:"14px"}}>
-                {error}
-              </div>
-            )}
+            {error && <div style={{marginTop:"16px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:"12px",padding:"14px 18px",color:"#fca5a5",fontSize:"14px"}}>{error}</div>}
 
             {loading && (
               <div style={{marginTop:"16px",background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"16px",padding:"48px",textAlign:"center"}}>
@@ -462,22 +540,203 @@ export default function Home() {
           </div>
         )}
 
-        {/* RESULT TAB */}
-        {activeTab==="result" && result && (
+        {/* ── COMPARE TAB ── */}
+        {activeTab==="compare" && (
           <div>
-            {/* Contract Type + Risk Scores */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"20px"}}>
+            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"16px",padding:"20px",marginBottom:"16px"}}>
+              <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>SELECT OUTPUT LANGUAGE</div>
+              <div style={{display:"flex",gap:"8px"}}>
+                {["English","Hindi","Marathi"].map((lang) => (
+                  <button key={lang} onClick={() => setLanguage(lang)} style={{padding:"8px 18px",borderRadius:"8px",border:language===lang?"1px solid #3b82f6":"1px solid #1f2937",background:language===lang?"rgba(59,130,246,0.15)":"transparent",color:language===lang?"#60a5fa":"#9ca3af",fontSize:"13px",fontWeight:"600",cursor:"pointer"}}>
+                    {lang==="English"?"🇬🇧 English":lang==="Hindi"?"🇮🇳 Hindi":"🇮🇳 Marathi"}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-              {/* Contract Type */}
-              <div style={{background:"rgba(99,102,241,0.1)",border:"1px solid rgba(99,102,241,0.3)",borderRadius:"12px",padding:"16px",display:"flex",alignItems:"center",gap:"12px"}}>
-                <div style={{fontSize:"32px"}}>{CONTRACT_ICONS[contractType] || "📄"}</div>
-                <div>
-                  <div style={{fontSize:"11px",color:"#818cf8",fontWeight:"600",letterSpacing:"1px",marginBottom:"4px"}}>CONTRACT TYPE</div>
-                  <div style={{fontSize:"18px",fontWeight:"800",color:"#f9fafb"}}>{contractType || "Unknown"}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px",marginBottom:"16px"}}>
+              {/* Contract A */}
+              <div style={{background:"rgba(59,130,246,0.05)",border:"1px solid rgba(59,130,246,0.3)",borderRadius:"16px",padding:"20px"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"12px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+                    <div style={{width:"28px",height:"28px",background:"rgba(59,130,246,0.2)",border:"1px solid rgba(59,130,246,0.4)",borderRadius:"8px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"13px",fontWeight:"800",color:"#60a5fa"}}>A</div>
+                    <span style={{fontSize:"14px",fontWeight:"700",color:"#93c5fd"}}>Contract A</span>
+                  </div>
+                  <div style={{position:"relative"}}>
+                    <button onClick={() => setShowSamples1(!showSamples1)} style={{padding:"5px 10px",borderRadius:"6px",border:"1px solid rgba(59,130,246,0.3)",background:"transparent",color:"#60a5fa",fontSize:"11px",cursor:"pointer",fontWeight:"600"}}>Sample ▾</button>
+                    {showSamples1 && (
+                      <div style={{position:"absolute",right:0,top:"32px",background:"#0f172a",border:"1px solid #1f2937",borderRadius:"10px",padding:"8px",zIndex:20,minWidth:"200px"}}>
+                        {Object.entries(SAMPLE_CONTRACTS).map(([key,val]) => (
+                          <button key={key} onClick={() => {setContract1(SAMPLE_CONTRACTS[key].text);setShowSamples1(false);}} style={{display:"block",width:"100%",padding:"8px 12px",borderRadius:"6px",border:"none",background:"transparent",color:"#d1d5db",fontSize:"12px",cursor:"pointer",textAlign:"left"}}
+                            onMouseEnter={(e) => e.currentTarget.style.background="#1f2937"}
+                            onMouseLeave={(e) => e.currentTarget.style.background="transparent"}
+                          >{val.label}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
+                <textarea value={contract1} onChange={(e) => setContract1(e.target.value)} placeholder="Paste Contract A here..."
+                  style={{width:"100%",height:"260px",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(59,130,246,0.2)",borderRadius:"10px",padding:"12px",color:"white",fontSize:"13px",resize:"vertical",outline:"none",fontFamily:"inherit",lineHeight:"1.6",boxSizing:"border-box"}}
+                  onFocus={(e) => e.target.style.borderColor="#3b82f6"}
+                  onBlur={(e) => e.target.style.borderColor="rgba(59,130,246,0.2)"}
+                />
+                <div style={{fontSize:"11px",color:"#4b5563",marginTop:"6px"}}>{contract1.trim().split(/\s+/).filter(Boolean).length} words</div>
               </div>
 
-              {/* Overall Risk */}
+              {/* Contract B */}
+              <div style={{background:"rgba(139,92,246,0.05)",border:"1px solid rgba(139,92,246,0.3)",borderRadius:"16px",padding:"20px"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"12px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+                    <div style={{width:"28px",height:"28px",background:"rgba(139,92,246,0.2)",border:"1px solid rgba(139,92,246,0.4)",borderRadius:"8px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"13px",fontWeight:"800",color:"#a78bfa"}}>B</div>
+                    <span style={{fontSize:"14px",fontWeight:"700",color:"#c4b5fd"}}>Contract B</span>
+                  </div>
+                  <div style={{position:"relative"}}>
+                    <button onClick={() => setShowSamples2(!showSamples2)} style={{padding:"5px 10px",borderRadius:"6px",border:"1px solid rgba(139,92,246,0.3)",background:"transparent",color:"#a78bfa",fontSize:"11px",cursor:"pointer",fontWeight:"600"}}>Sample ▾</button>
+                    {showSamples2 && (
+                      <div style={{position:"absolute",right:0,top:"32px",background:"#0f172a",border:"1px solid #1f2937",borderRadius:"10px",padding:"8px",zIndex:20,minWidth:"200px"}}>
+                        {Object.entries(SAMPLE_CONTRACTS).map(([key,val]) => (
+                          <button key={key} onClick={() => {setContract2(SAMPLE_CONTRACTS[key].text);setShowSamples2(false);}} style={{display:"block",width:"100%",padding:"8px 12px",borderRadius:"6px",border:"none",background:"transparent",color:"#d1d5db",fontSize:"12px",cursor:"pointer",textAlign:"left"}}
+                            onMouseEnter={(e) => e.currentTarget.style.background="#1f2937"}
+                            onMouseLeave={(e) => e.currentTarget.style.background="transparent"}
+                          >{val.label}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <textarea value={contract2} onChange={(e) => setContract2(e.target.value)} placeholder="Paste Contract B here..."
+                  style={{width:"100%",height:"260px",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(139,92,246,0.2)",borderRadius:"10px",padding:"12px",color:"white",fontSize:"13px",resize:"vertical",outline:"none",fontFamily:"inherit",lineHeight:"1.6",boxSizing:"border-box"}}
+                  onFocus={(e) => e.target.style.borderColor="#8b5cf6"}
+                  onBlur={(e) => e.target.style.borderColor="rgba(139,92,246,0.2)"}
+                />
+                <div style={{fontSize:"11px",color:"#4b5563",marginTop:"6px"}}>{contract2.trim().split(/\s+/).filter(Boolean).length} words</div>
+              </div>
+            </div>
+
+            <div style={{display:"flex",justifyContent:"center",marginBottom:"20px"}}>
+              <button onClick={compareContracts} disabled={compareLoading} style={{padding:"14px 48px",borderRadius:"10px",border:"none",background:compareLoading?"#1f2937":"linear-gradient(135deg,#3b82f6,#8b5cf6)",color:compareLoading?"#6b7280":"white",fontSize:"15px",fontWeight:"700",cursor:compareLoading?"not-allowed":"pointer"}}>
+                {compareLoading?"Comparing...":"⚖️ Compare Contracts"}
+              </button>
+            </div>
+
+            {compareError && <div style={{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:"12px",padding:"14px 18px",color:"#fca5a5",fontSize:"14px",marginBottom:"16px"}}>{compareError}</div>}
+
+            {compareLoading && (
+              <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"16px",padding:"48px",textAlign:"center"}}>
+                <div style={{fontSize:"48px",marginBottom:"16px"}}>⚖️</div>
+                <p style={{color:"#9ca3af",fontSize:"16px",marginBottom:"8px"}}>Comparing contracts side by side...</p>
+                <p style={{color:"#4b5563",fontSize:"12px"}}>This may take 15 to 25 seconds</p>
+              </div>
+            )}
+
+            {compareResult && !compareLoading && (
+              <div>
+                {/* Winner banner */}
+                <div style={{background:compareResult.winner==="CONTRACT_A"?"rgba(59,130,246,0.12)":compareResult.winner==="CONTRACT_B"?"rgba(139,92,246,0.12)":"rgba(16,185,129,0.12)",border:`1px solid ${compareResult.winner==="CONTRACT_A"?"rgba(59,130,246,0.5)":compareResult.winner==="CONTRACT_B"?"rgba(139,92,246,0.5)":"rgba(16,185,129,0.5)"}`,borderRadius:"16px",padding:"24px",marginBottom:"16px",textAlign:"center"}}>
+                  <div style={{fontSize:"13px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"8px"}}>VERDICT</div>
+                  <div style={{fontSize:"28px",fontWeight:"900",color:compareResult.winner==="CONTRACT_A"?"#60a5fa":compareResult.winner==="CONTRACT_B"?"#a78bfa":"#10b981",marginBottom:"10px"}}>
+                    {compareResult.winner==="CONTRACT_A"?"✅ Contract A is Safer":compareResult.winner==="CONTRACT_B"?"✅ Contract B is Safer":"🤝 Both are Equal"}
+                  </div>
+                  <div style={{color:"#9ca3af",fontSize:"14px",maxWidth:"600px",margin:"0 auto"}}>
+                    {parseSection(compareResult.result,"VERDICT")}
+                  </div>
+                </div>
+
+                {/* Score cards — lower = safer */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"16px"}}>
+                  {[
+                    {label:"Contract A", score:compareResult.scoreA, color:"#60a5fa", bg:"rgba(59,130,246,0.1)", border:"rgba(59,130,246,0.3)", winner:compareResult.winner==="CONTRACT_A"},
+                    {label:"Contract B", score:compareResult.scoreB, color:"#a78bfa", bg:"rgba(139,92,246,0.1)", border:"rgba(139,92,246,0.3)", winner:compareResult.winner==="CONTRACT_B"},
+                  ].map((c,i) => (
+                    <div key={i} style={{background:c.bg,border:`1px solid ${c.border}`,borderRadius:"12px",padding:"16px",textAlign:"center",position:"relative"}}>
+                      {c.winner && <div style={{position:"absolute",top:"-10px",left:"50%",transform:"translateX(-50%)",background:"#10b981",color:"white",fontSize:"10px",fontWeight:"700",padding:"3px 12px",borderRadius:"20px",whiteSpace:"nowrap"}}>✅ SAFER CHOICE</div>}
+                      <div style={{fontSize:"12px",color:c.color,fontWeight:"600",letterSpacing:"1px",marginBottom:"8px"}}>{c.label.toUpperCase()}</div>
+                      <div style={{fontSize:"36px",fontWeight:"900",color:getSafetyColor(c.score)}}>{c.score}/10</div>
+                      <div style={{fontSize:"12px",color:getSafetyColor(c.score),fontWeight:"700",marginTop:"4px"}}>{getSafetyLabel(c.score)}</div>
+                      <div style={{fontSize:"10px",color:"#4b5563",marginTop:"2px"}}>risk score · lower = safer</div>
+                      <div style={{width:"100%",background:"rgba(255,255,255,0.1)",borderRadius:"4px",height:"6px",marginTop:"10px"}}>
+                        <div style={{width:`${c.score*10}%`,background:getSafetyColor(c.score),borderRadius:"4px",height:"6px"}}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Key differences */}
+                <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"12px",padding:"20px",marginBottom:"16px"}}>
+                  <div style={{fontSize:"13px",fontWeight:"700",color:"#f9fafb",marginBottom:"14px"}}>🔄 Key Differences</div>
+                  {parseDifferences(compareResult.result).map((diff,i,arr) => (
+                    <div key={i} style={{borderBottom:i<arr.length-1?"1px solid #1f2937":"none",paddingBottom:"12px",marginBottom:"12px"}}>
+                      <div style={{fontSize:"11px",color:"#6366f1",fontWeight:"700",letterSpacing:"1px",marginBottom:"8px"}}>{diff.topic.toUpperCase()}</div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:"8px",alignItems:"start"}}>
+                        <div style={{background:"rgba(59,130,246,0.08)",border:"1px solid rgba(59,130,246,0.2)",borderRadius:"8px",padding:"10px"}}>
+                          <div style={{fontSize:"10px",color:"#60a5fa",fontWeight:"700",marginBottom:"4px"}}>CONTRACT A</div>
+                          <div style={{fontSize:"12px",color:"#d1d5db"}}>{diff.aText}</div>
+                        </div>
+                        <div style={{fontSize:"18px",color:"#374151",paddingTop:"8px"}}>vs</div>
+                        <div style={{background:"rgba(139,92,246,0.08)",border:"1px solid rgba(139,92,246,0.2)",borderRadius:"8px",padding:"10px"}}>
+                          <div style={{fontSize:"10px",color:"#a78bfa",fontWeight:"700",marginBottom:"4px"}}>CONTRACT B</div>
+                          <div style={{fontSize:"12px",color:"#d1d5db"}}>{diff.bText}</div>
+                        </div>
+                      </div>
+                      {diff.winnerText && diff.winnerText!=="Equal" && (
+                        <div style={{marginTop:"6px",fontSize:"11px",color:diff.winnerText.includes("A")?"#60a5fa":"#a78bfa",fontWeight:"600"}}>
+                          ✓ Better clause: Contract {diff.winnerText.includes("A")?"A":"B"}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Risks side by side */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"16px"}}>
+                  {[
+                    {label:"Contract A — Risks", key:"CONTRACT_A_RISKS", color:"#f87171"},
+                    {label:"Contract B — Risks", key:"CONTRACT_B_RISKS", color:"#f87171"},
+                  ].map((c,i) => (
+                    <div key={i} style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"12px",padding:"16px"}}>
+                      <div style={{fontSize:"12px",color:c.color,fontWeight:"700",marginBottom:"12px"}}>{c.label}</div>
+                      {formatCompareLines(parseSection(compareResult.result,c.key))}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Advantages side by side */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"16px"}}>
+                  {[
+                    {label:"Contract A — Advantages", key:"CONTRACT_A_ADVANTAGES"},
+                    {label:"Contract B — Advantages", key:"CONTRACT_B_ADVANTAGES"},
+                  ].map((c,i) => (
+                    <div key={i} style={{background:"rgba(16,185,129,0.05)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:"12px",padding:"16px"}}>
+                      <div style={{fontSize:"12px",color:"#10b981",fontWeight:"700",marginBottom:"12px"}}>{c.label}</div>
+                      {formatCompareLines(parseSection(compareResult.result,c.key))}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Recommendation */}
+                <div style={{background:"rgba(59,130,246,0.08)",border:"1px solid rgba(59,130,246,0.3)",borderLeft:"3px solid #3b82f6",borderRadius:"12px",padding:"20px"}}>
+                  <div style={{fontSize:"13px",fontWeight:"700",color:"#f9fafb",marginBottom:"10px"}}>💡 Final Recommendation</div>
+                  <div style={{color:"#d1d5db",fontSize:"14px",lineHeight:"1.7"}}>{parseSection(compareResult.result,"RECOMMENDATION")}</div>
+                </div>
+
+                <p style={{textAlign:"center",color:"#374151",fontSize:"12px",marginTop:"24px"}}>LegalLens is an AI tool. Always consult a real lawyer for critical decisions.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── RESULT TAB ── */}
+        {activeTab==="result" && result && (
+          <div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"20px"}}>
+              <div style={{background:"rgba(99,102,241,0.1)",border:"1px solid rgba(99,102,241,0.3)",borderRadius:"12px",padding:"16px",display:"flex",alignItems:"center",gap:"12px"}}>
+                <div style={{fontSize:"32px"}}>{CONTRACT_ICONS[contractType]||"📄"}</div>
+                <div>
+                  <div style={{fontSize:"11px",color:"#818cf8",fontWeight:"600",letterSpacing:"1px",marginBottom:"4px"}}>CONTRACT TYPE</div>
+                  <div style={{fontSize:"18px",fontWeight:"800",color:"#f9fafb"}}>{contractType||"Unknown"}</div>
+                </div>
+              </div>
               <div style={{background:`rgba(${riskScore>=7?"239,68,68":riskScore>=4?"249,115,22":"16,185,129"},0.1)`,border:`1px solid rgba(${riskScore>=7?"239,68,68":riskScore>=4?"249,115,22":"16,185,129"},0.3)`,borderRadius:"12px",padding:"16px"}}>
                 <div style={{fontSize:"11px",color:getRiskColor(riskScore),fontWeight:"600",letterSpacing:"1px",marginBottom:"8px"}}>OVERALL RISK</div>
                 <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
@@ -492,15 +751,14 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Risk Category Breakdown */}
             <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"12px",padding:"16px",marginBottom:"20px"}}>
               <div style={{fontSize:"11px",color:"#9ca3af",fontWeight:"600",letterSpacing:"1px",marginBottom:"14px"}}>RISK BREAKDOWN BY CATEGORY</div>
               {[
-                {label:"Financial Risk", icon:"💸", score:financialRisk, desc:"Hidden fees, penalties, payment terms"},
-                {label:"Legal Risk",     icon:"⚖️", score:legalRisk,     desc:"Termination, liability, disputes"},
-                {label:"Privacy Risk",  icon:"🔐", score:privacyRisk,   desc:"Data, confidentiality, IP ownership"},
+                {label:"Financial Risk",icon:"💸",score:financialRisk,desc:"Hidden fees, penalties, payment terms"},
+                {label:"Legal Risk",    icon:"⚖️",score:legalRisk,    desc:"Termination, liability, disputes"},
+                {label:"Privacy Risk", icon:"🔐",score:privacyRisk,  desc:"Data, confidentiality, IP ownership"},
               ].map((cat,i) => (
-                <div key={i} style={{marginBottom: i < 2 ? "14px" : "0"}}>
+                <div key={i} style={{marginBottom:i<2?"14px":"0"}}>
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"6px"}}>
                     <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
                       <span style={{fontSize:"16px"}}>{cat.icon}</span>
@@ -519,57 +777,43 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Action Buttons */}
             <div style={{display:"flex",justifyContent:"flex-end",gap:"8px",marginBottom:"20px"}}>
-              <button onClick={() => navigator.clipboard.writeText(result)} style={{padding:"8px 14px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"12px",cursor:"pointer",fontWeight:"600"}}>
-                📋 Copy
+              <button onClick={handleCopy} style={{padding:"8px 14px",borderRadius:"8px",border:"1px solid #374151",background:copySuccess?"rgba(16,185,129,0.15)":"transparent",color:copySuccess?"#10b981":"#9ca3af",fontSize:"12px",cursor:"pointer",fontWeight:"600",transition:"all 0.2s"}}>
+                {copySuccess?"✅ Copied!":"📋 Copy"}
               </button>
-              <button onClick={() => window.print()} style={{padding:"8px 14px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"12px",cursor:"pointer",fontWeight:"600"}}>
-                🖨️ Print
-              </button>
-              <button onClick={() => { const b=new Blob([result],{type:"text/plain"}); const u=URL.createObjectURL(b); const a=window.document.createElement("a"); a.href=u; a.download="LegalLens-Report.txt"; a.click(); }} style={{padding:"8px 14px",borderRadius:"8px",border:"none",background:"linear-gradient(135deg,#10b981,#059669)",color:"white",fontSize:"12px",cursor:"pointer",fontWeight:"600"}}>
-                ⬇️ Download
-              </button>
+              <button onClick={() => window.print()} style={{padding:"8px 14px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"12px",cursor:"pointer",fontWeight:"600"}}>🖨️ Print</button>
+              <button onClick={() => {const b=new Blob([result],{type:"text/plain"});const u=URL.createObjectURL(b);const a=window.document.createElement("a");a.href=u;a.download="LegalLens-Report.txt";a.click();}} style={{padding:"8px 14px",borderRadius:"8px",border:"none",background:"linear-gradient(135deg,#10b981,#059669)",color:"white",fontSize:"12px",cursor:"pointer",fontWeight:"600"}}>⬇️ Download</button>
             </div>
 
-            {/* Analysis Sections */}
-            {sections.map((section, i) => (
+            {sections.map((section,i) => (
               <div key={i} style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderLeft:`3px solid ${section.border}`,borderRadius:"12px",padding:"20px",marginBottom:"12px"}}>
                 <div style={{fontWeight:"700",fontSize:"15px",color:"#f9fafb",marginBottom:"12px",display:"flex",alignItems:"center",gap:"8px"}}>
-                  <span>{section.icon}</span> {section.title}
+                  <span>{section.icon}</span>{section.title}
                 </div>
-                <div style={{lineHeight:"1.7"}}>
-                  {formatLines(parseSection(result, section.heading))}
-                </div>
+                <div style={{lineHeight:"1.7"}}>{formatLines(parseSection(result,section.heading))}</div>
               </div>
             ))}
 
-            {/* CHAT */}
+            {/* Chat */}
             <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(99,102,241,0.4)",borderLeft:"3px solid #6366f1",borderRadius:"12px",padding:"20px",marginTop:"24px"}}>
-              <div style={{fontWeight:"700",fontSize:"15px",color:"#f9fafb",marginBottom:"4px"}}>
-                💬 Chat with this Contract
-              </div>
+              <div style={{fontWeight:"700",fontSize:"15px",color:"#f9fafb",marginBottom:"4px"}}>💬 Chat with this Contract</div>
               <p style={{fontSize:"12px",color:"#6b7280",marginBottom:"16px",marginTop:0}}>Ask any question about this contract and get an instant AI answer.</p>
-
-              {chatMessages.length === 0 && (
+              {chatMessages.length===0 && (
                 <div style={{marginBottom:"16px"}}>
                   <div style={{fontSize:"11px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"8px"}}>SUGGESTED QUESTIONS</div>
                   <div style={{display:"flex",flexWrap:"wrap",gap:"8px"}}>
-                    {SUGGESTED_QUESTIONS.map((q, i) => (
+                    {SUGGESTED_QUESTIONS.map((q,i) => (
                       <button key={i} onClick={() => sendChatMessage(q)} style={{padding:"7px 14px",borderRadius:"20px",border:"1px solid #374151",background:"rgba(255,255,255,0.03)",color:"#9ca3af",fontSize:"12px",cursor:"pointer",fontWeight:"500"}}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor="#6366f1"; e.currentTarget.style.color="#a78bfa"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor="#374151"; e.currentTarget.style.color="#9ca3af"; }}
-                      >
-                        {q}
-                      </button>
+                        onMouseEnter={(e) => {e.currentTarget.style.borderColor="#6366f1";e.currentTarget.style.color="#a78bfa";}}
+                        onMouseLeave={(e) => {e.currentTarget.style.borderColor="#374151";e.currentTarget.style.color="#9ca3af";}}
+                      >{q}</button>
                     ))}
                   </div>
                 </div>
               )}
-
-              {chatMessages.length > 0 && (
+              {chatMessages.length>0 && (
                 <div style={{maxHeight:"320px",overflowY:"auto",marginBottom:"16px",display:"flex",flexDirection:"column",gap:"12px"}}>
-                  {chatMessages.map((msg, i) => (
+                  {chatMessages.map((msg,i) => (
                     <div key={i} style={{display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start"}}>
                       <div style={{maxWidth:"80%",padding:"10px 14px",borderRadius:msg.role==="user"?"12px 12px 4px 12px":"12px 12px 12px 4px",background:msg.role==="user"?"linear-gradient(135deg,#3b82f6,#6366f1)":"rgba(255,255,255,0.05)",border:msg.role==="assistant"?"1px solid #1f2937":"none",fontSize:"13px",lineHeight:"1.6",color:msg.role==="user"?"white":"#d1d5db"}}>
                         {msg.content}
@@ -578,48 +822,36 @@ export default function Home() {
                   ))}
                   {chatLoading && (
                     <div style={{display:"flex",justifyContent:"flex-start"}}>
-                      <div style={{padding:"10px 14px",borderRadius:"12px 12px 12px 4px",background:"rgba(255,255,255,0.05)",border:"1px solid #1f2937",fontSize:"13px",color:"#6b7280"}}>
-                        Thinking...
-                      </div>
+                      <div style={{padding:"10px 14px",borderRadius:"12px 12px 12px 4px",background:"rgba(255,255,255,0.05)",border:"1px solid #1f2937",fontSize:"13px",color:"#6b7280"}}>Thinking...</div>
                     </div>
                   )}
                   <div ref={chatEndRef}/>
                 </div>
               )}
-
               <div style={{display:"flex",gap:"8px"}}>
-                <input
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => e.key==="Enter" && sendChatMessage()}
-                  placeholder="Ask anything about this contract..."
+                <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key==="Enter"&&sendChatMessage()} placeholder="Ask anything about this contract..."
                   style={{flex:1,background:"rgba(0,0,0,0.3)",border:"1px solid #1f2937",borderRadius:"10px",padding:"10px 14px",color:"white",fontSize:"13px",outline:"none",fontFamily:"inherit"}}
                   onFocus={(e) => e.target.style.borderColor="#6366f1"}
                   onBlur={(e) => e.target.style.borderColor="#1f2937"}
                 />
-                <button onClick={() => sendChatMessage()} disabled={chatLoading||!chatInput.trim()} style={{padding:"10px 20px",borderRadius:"10px",border:"none",background:chatLoading||!chatInput.trim()?"#1f2937":"linear-gradient(135deg,#6366f1,#8b5cf6)",color:chatLoading||!chatInput.trim()?"#6b7280":"white",fontSize:"13px",fontWeight:"700",cursor:chatLoading||!chatInput.trim()?"not-allowed":"pointer"}}>
-                  Send
-                </button>
+                <button onClick={() => sendChatMessage()} disabled={chatLoading||!chatInput.trim()} style={{padding:"10px 20px",borderRadius:"10px",border:"none",background:chatLoading||!chatInput.trim()?"#1f2937":"linear-gradient(135deg,#6366f1,#8b5cf6)",color:chatLoading||!chatInput.trim()?"#6b7280":"white",fontSize:"13px",fontWeight:"700",cursor:chatLoading||!chatInput.trim()?"not-allowed":"pointer"}}>Send</button>
               </div>
             </div>
-
-            <p style={{textAlign:"center",color:"#374151",fontSize:"12px",marginTop:"24px"}}>
-              LegalLens is an AI tool. Always consult a real lawyer for critical decisions.
-            </p>
+            <p style={{textAlign:"center",color:"#374151",fontSize:"12px",marginTop:"24px"}}>LegalLens is an AI tool. Always consult a real lawyer for critical decisions.</p>
           </div>
         )}
 
-        {activeTab==="result" && !result && (
+        {activeTab==="result"&&!result && (
           <div style={{textAlign:"center",padding:"80px 0",color:"#4b5563"}}>
             <div style={{fontSize:"48px",marginBottom:"16px"}}>📄</div>
-            <p>No analysis yet. Go to Input tab and paste a document first.</p>
+            <p>No analysis yet. Go to the Analyze tab and paste a document first.</p>
           </div>
         )}
 
-        {/* HISTORY TAB */}
+        {/* ── HISTORY TAB ── */}
         {activeTab==="history" && (
           <div>
-            {history.length === 0 ? (
+            {history.length===0 ? (
               <div style={{textAlign:"center",padding:"80px 0",color:"#4b5563"}}>
                 <div style={{fontSize:"48px",marginBottom:"16px"}}>🕐</div>
                 <p>No history yet. Analyze a document first.</p>
@@ -628,9 +860,7 @@ export default function Home() {
               <div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
                   <span style={{color:"#6b7280",fontSize:"14px"}}>Last {history.length} analyses saved locally</span>
-                  <button onClick={clearHistory} style={{padding:"6px 14px",borderRadius:"8px",border:"1px solid rgba(239,68,68,0.4)",background:"rgba(239,68,68,0.1)",color:"#f87171",fontSize:"12px",cursor:"pointer",fontWeight:"600"}}>
-                    🗑️ Clear All
-                  </button>
+                  <button onClick={clearHistory} style={{padding:"6px 14px",borderRadius:"8px",border:"1px solid rgba(239,68,68,0.4)",background:"rgba(239,68,68,0.1)",color:"#f87171",fontSize:"12px",cursor:"pointer",fontWeight:"600"}}>🗑️ Clear All</button>
                 </div>
                 {history.map((item) => (
                   <div key={item.id} onClick={() => loadFromHistory(item)} style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"12px",padding:"16px",marginBottom:"10px",cursor:"pointer"}}
@@ -640,8 +870,8 @@ export default function Home() {
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                       <div style={{flex:1}}>
                         <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"6px"}}>
-                          <span style={{fontSize:"20px"}}>{CONTRACT_ICONS[item.contractType] || "📄"}</span>
-                          <span style={{fontSize:"13px",fontWeight:"700",color:"#f9fafb"}}>{item.contractType || "Unknown"}</span>
+                          <span style={{fontSize:"20px"}}>{CONTRACT_ICONS[item.contractType]||"📄"}</span>
+                          <span style={{fontSize:"13px",fontWeight:"700",color:"#f9fafb"}}>{item.contractType||"Unknown"}</span>
                           <span style={{background:"rgba(59,130,246,0.15)",border:"1px solid rgba(59,130,246,0.3)",color:"#60a5fa",fontSize:"10px",fontWeight:"600",padding:"2px 8px",borderRadius:"20px"}}>{item.language}</span>
                         </div>
                         <p style={{color:"#9ca3af",fontSize:"12px",marginBottom:"4px"}}>{item.preview}</p>
