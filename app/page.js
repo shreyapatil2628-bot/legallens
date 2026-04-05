@@ -691,7 +691,7 @@ export default function Home() {
             <div style={{display:"inline-block",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:"20px",padding:"4px 14px",fontSize:"11px",color:"#f87171",fontWeight:"700",letterSpacing:"1px",marginBottom:"16px"}}>IMPORTANT DISCLAIMER</div>
             <h2 style={{fontSize:"22px",fontWeight:"900",color:"#f9fafb",marginBottom:"16px",letterSpacing:"-0.5px"}}>LegalLens is an AI Tool</h2>
             <p style={{color:"#9ca3af",fontSize:"14px",lineHeight:"1.8",marginBottom:"24px"}}>
-              LegalLens uses AI to help you understand legal contracts faster. It is <strong style={{color:"#f9fafb"}}>not a substitute for professional legal advice.</strong> Always consult a qualified lawyer before signing any important document.
+              Most people sign contracts without truly understanding them. LegalLens changes that. Powered by advanced AI, it breaks down complex legal language into simple terms, highlights risks, and helps you negotiate better — before you sign.
             </p>
             <button onClick={acceptDisclaimer} style={{width:"100%",padding:"14px",borderRadius:"10px",border:"none",background:"linear-gradient(135deg,#3b82f6,#6366f1)",color:"white",fontSize:"15px",fontWeight:"700",cursor:"pointer"}}>
               ✅ I Understand — Continue to LegalLens
