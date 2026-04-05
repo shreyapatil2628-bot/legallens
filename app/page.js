@@ -441,7 +441,7 @@ export default function Home() {
             Don't Sign Blind
           </h1>
           <p style={{color:"#6b7280",fontSize:"16px",maxWidth:"500px",margin:"0 auto",lineHeight:"1.6"}}>
-            Paste any contract in English, Hindi or Marathi. Get instant risk analysis in Indian Rupees.
+            Read less. Understand more. Let AI protect you before you sign.
           </p>
         </div>
 
