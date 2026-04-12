@@ -1,6 +1,7 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-
+import { useAuth } from "@clerk/nextjs";
 const SAMPLE_CONTRACTS = {
   rental: {
     label: "🏠 Rental Agreement",
@@ -391,7 +392,9 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 export default function Home() {
-  const [document, setDocument] = useState("");
+  const { isLoaded, isSignedIn } = useAuth();
+  const router = useRouter();
+  const [contractText, setContractText] = useState("");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -410,6 +413,10 @@ export default function Home() {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
+const [emailLoading, setEmailLoading] = useState(false);
+const [emailSuccess, setEmailSuccess] = useState(false);
+const [showEmailBox, setShowEmailBox] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const [contract1, setContract1] = useState("");
@@ -421,6 +428,11 @@ export default function Home() {
   const [showSamples2, setShowSamples2] = useState(false);
 
   const chatEndRef = useRef(null);
+useEffect(() => {
+  if (isLoaded && !isSignedIn) {
+    router.push("/sign-in");
+  }
+}, [isLoaded, isSignedIn, router]);
 
   useEffect(() => {
     const saved = localStorage.getItem("legallens-history");
@@ -431,12 +443,16 @@ export default function Home() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
-  // ✅ FIXED: Show disclaimer EVERY time the page loads
   useEffect(() => {
     setShowDisclaimer(true);
   }, []);
-
-  // ✅ FIXED: No localStorage — just close the popup
+if (!isLoaded || !isSignedIn) {
+    return (
+      <div style={{minHeight:"100vh",background:"#050914",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{color:"#6b7280",fontSize:"16px"}}>Loading...</div>
+      </div>
+    );
+  }
   const acceptDisclaimer = () => {
     setShowDisclaimer(false);
   };
@@ -461,7 +477,7 @@ export default function Home() {
   };
 
   const loadSample = (key) => {
-    setDocument(SAMPLE_CONTRACTS[key].text);
+    setContractText(SAMPLE_CONTRACTS[key].text);
     setShowSamples(false);
     setResult("");
     setError("");
@@ -474,8 +490,8 @@ export default function Home() {
   };
 
   const analyzeDocument = async () => {
-    if (!document.trim()) { setError("Please paste your legal document first."); return; }
-    if (document.trim().length < 50) { setError("Document is too short."); return; }
+    if (!contractText.trim()) { setError("Please paste your legal document first."); return; }
+    if (contractText.trim().length < 50) { setError("Document is too short."); return; }
     setLoading(true); setError(""); setResult(""); setContractType(null);
     setRiskScore(null); setFinancialRisk(null); setLegalRisk(null); setPrivacyRisk(null);
     setChatMessages([]);
@@ -483,7 +499,7 @@ export default function Home() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ document, language }),
+        body: JSON.stringify({ document: contractText, language }),
       });
       const data = await res.json();
       if (data.error) setError(data.error);
@@ -494,7 +510,7 @@ export default function Home() {
         setFinancialRisk(data.financialRisk);
         setLegalRisk(data.legalRisk);
         setPrivacyRisk(data.privacyRisk);
-        saveToHistory(document, data.result, data.contractType, data.riskScore, language, data.financialRisk, data.legalRisk, data.privacyRisk);
+        saveToHistory(contractText, data.result, data.contractType, data.riskScore, language, data.financialRisk, data.legalRisk, data.privacyRisk);
         setActiveTab("result");
       }
     } catch { setError("Network error. Please try again."); }
@@ -529,7 +545,7 @@ export default function Home() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, contractText: document, chatHistory: chatMessages, language }),
+        body: JSON.stringify({ question, contractText, chatHistory: chatMessages, language }),
       });
       const data = await res.json();
       if (data.error) {
@@ -685,7 +701,6 @@ export default function Home() {
   return (
     <div style={{minHeight:"100vh",background:"#050914",color:"white",fontFamily:"'Segoe UI',sans-serif"}}>
 
-      {/* ── DISCLAIMER MODAL — shows every visit ── */}
       {showDisclaimer && (
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:"24px"}}>
           <div style={{background:"#0d1117",border:"1px solid #1f2937",borderRadius:"20px",padding:"40px",maxWidth:"480px",width:"100%",textAlign:"center"}}>
@@ -766,7 +781,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* ── ANALYZE TAB ── */}
+        {/* ANALYZE TAB */}
         {activeTab==="input" && (
           <div>
             <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"16px",padding:"24px"}}>
@@ -780,63 +795,43 @@ export default function Home() {
                   ))}
                 </div>
               </div>
+
               {/* File Upload */}
-<div style={{marginBottom:"20px"}}>
-  <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>
-    📎 UPLOAD CONTRACT (PDF OR IMAGE)
-  </div>
-  <label style={{display:"flex",alignItems:"center",gap:"16px",background:"rgba(0,0,0,0.3)",border:"2px dashed #374151",borderRadius:"12px",padding:"20px",cursor:"pointer"}}
-    onMouseEnter={(e) => e.currentTarget.style.borderColor="#3b82f6"}
-    onMouseLeave={(e) => e.currentTarget.style.borderColor="#374151"}
-  >
-    <div style={{fontSize:"36px"}}>
-      {uploadLoading ? "⏳" : "📄"}
-    </div>
-    <div style={{flex:1}}>
-      <div style={{fontSize:"14px",fontWeight:"600",color:"#f9fafb",marginBottom:"4px"}}>
-        {uploadLoading ? "Reading your file..." : "📸 Click to upload Photo of Contract"}
-      </div>
-      <div style={{fontSize:"12px",color:"#6b7280"}}>
-        Take a clear photo of your contract and upload (JPG, PNG)
-      </div>
-      {uploadStatus && (
-        <div style={{fontSize:"12px",color:"#10b981",marginTop:"4px",fontWeight:"600"}}>
-          {uploadStatus}
-        </div>
-      )}
-    </div>
-    <input
-      type="file"
-      accept="image/*"
-      style={{display:"none"}}
-      disabled={uploadLoading}
-      onChange={async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        setUploadLoading(true);
-        setUploadStatus("");
-        setError("");
-        try {
-          const formData = new FormData();
-          formData.append("file", file);
-          const res = await fetch("/api/pdf", { method: "POST", body: formData });
-          const data = await res.json();
-          if (data.error) {
-            setError(data.error);
-          } else {
-            setDocument(data.text);
-            setUploadStatus(`✅ ${data.type === "pdf" ? "PDF" : "Image"} read successfully! ${data.text.split(/\s+/).length} words extracted.`);
-          }
-        } catch {
-          setError("Failed to upload file. Please try again.");
-        } finally {
-          setUploadLoading(false);
-          e.target.value = "";
-        }
-      }}
-    />
-  </label>
-</div>
+              <div style={{marginBottom:"20px"}}>
+                <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>📎 UPLOAD CONTRACT (PDF OR IMAGE)</div>
+                <label style={{display:"flex",alignItems:"center",gap:"16px",background:"rgba(0,0,0,0.3)",border:"2px dashed #374151",borderRadius:"12px",padding:"20px",cursor:"pointer"}}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor="#3b82f6"}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor="#374151"}
+                >
+                  <div style={{fontSize:"36px"}}>{uploadLoading ? "⏳" : "📄"}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:"14px",fontWeight:"600",color:"#f9fafb",marginBottom:"4px"}}>
+                      {uploadLoading ? "Reading your file..." : "📸 Click to upload Photo of Contract"}
+                    </div>
+                    <div style={{fontSize:"12px",color:"#6b7280"}}>Take a clear photo of your contract and upload (JPG, PNG)</div>
+                    {uploadStatus && <div style={{fontSize:"12px",color:"#10b981",marginTop:"4px",fontWeight:"600"}}>{uploadStatus}</div>}
+                  </div>
+                  <input type="file" accept="image/*" style={{display:"none"}} disabled={uploadLoading}
+                    onChange={async (e) => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      setUploadLoading(true); setUploadStatus(""); setError("");
+                      try {
+                        const formData = new FormData();
+                        formData.append("file", file);
+                        const res = await fetch("/api/pdf", { method: "POST", body: formData });
+                        const data = await res.json();
+                        if (data.error) { setError(data.error); }
+                        else {
+                          setContractText(data.text);
+                          setUploadStatus(`✅ ${data.type === "pdf" ? "PDF" : "Image"} read successfully! ${data.text.split(/\s+/).length} words extracted.`);
+                        }
+                      } catch { setError("Failed to upload file. Please try again."); }
+                      finally { setUploadLoading(false); e.target.value = ""; }
+                    }}
+                  />
+                </label>
+              </div>
 
               <div style={{marginBottom:"20px"}}>
                 <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>📚 SAMPLE CONTRACTS LIBRARY</div>
@@ -858,7 +853,7 @@ export default function Home() {
 
               <div style={{marginBottom:"16px"}}>
                 <div style={{fontSize:"12px",color:"#6b7280",fontWeight:"600",letterSpacing:"1px",marginBottom:"10px"}}>PASTE YOUR CONTRACT BELOW</div>
-                <textarea value={document} onChange={(e) => setDocument(e.target.value)}
+                <textarea value={contractText} onChange={(e) => setContractText(e.target.value)}
                   placeholder="Paste your rental agreement, job offer, freelance contract, or any legal document here..."
                   style={{width:"100%",height:"300px",background:"rgba(0,0,0,0.3)",border:"1px solid #1f2937",borderRadius:"12px",padding:"16px",color:"white",fontSize:"14px",resize:"vertical",outline:"none",fontFamily:"inherit",lineHeight:"1.6",boxSizing:"border-box"}}
                   onFocus={(e) => e.target.style.borderColor="#3b82f6"}
@@ -867,9 +862,9 @@ export default function Home() {
               </div>
 
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span style={{fontSize:"12px",color:"#4b5563"}}>{document.length} chars · {document.trim().split(/\s+/).filter(Boolean).length} words</span>
+                <span style={{fontSize:"12px",color:"#4b5563"}}>{contractText.length} chars · {contractText.trim().split(/\s+/).filter(Boolean).length} words</span>
                 <div style={{display:"flex",gap:"10px"}}>
-                  <button onClick={() => {setDocument("");setResult("");setError("");setContractType(null);setRiskScore(null);setFinancialRisk(null);setLegalRisk(null);setPrivacyRisk(null);setChatMessages([]);}} style={{padding:"10px 20px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"13px",cursor:"pointer",fontWeight:"600"}}>Clear</button>
+                  <button onClick={() => {setContractText("");setResult("");setError("");setContractType(null);setRiskScore(null);setFinancialRisk(null);setLegalRisk(null);setPrivacyRisk(null);setChatMessages([]);}} style={{padding:"10px 20px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"13px",cursor:"pointer",fontWeight:"600"}}>Clear</button>
                   <button onClick={analyzeDocument} disabled={loading} style={{padding:"10px 28px",borderRadius:"8px",border:"none",background:loading?"#1f2937":"linear-gradient(135deg,#3b82f6,#6366f1)",color:loading?"#6b7280":"white",fontSize:"13px",fontWeight:"700",cursor:loading?"not-allowed":"pointer"}}>
                     {loading?"Analyzing...":"Analyze Now"}
                   </button>
@@ -889,7 +884,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── COMPARE TAB ── */}
+        {/* COMPARE TAB */}
         {activeTab==="compare" && (
           <div>
             <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderRadius:"16px",padding:"20px",marginBottom:"16px"}}>
@@ -1064,7 +1059,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── RESULT TAB ── */}
+        {/* RESULT TAB */}
         {activeTab==="result" && result && (
           <div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"20px"}}>
@@ -1120,9 +1115,44 @@ export default function Home() {
                 {copySuccess?"✅ Copied!":"📋 Copy"}
               </button>
               <button onClick={() => window.print()} style={{padding:"8px 14px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"12px",cursor:"pointer",fontWeight:"600"}}>🖨️ Print</button>
+        <button onClick={() => setShowEmailBox(!showEmailBox)} style={{padding:"8px 14px",borderRadius:"8px",border:"1px solid #374151",background:"transparent",color:"#9ca3af",fontSize:"12px",cursor:"pointer",fontWeight:"600"}}>📧 Email</button>
               <button onClick={() => {const b=new Blob([result],{type:"text/plain"});const u=URL.createObjectURL(b);const a=window.document.createElement("a");a.href=u;a.download="LegalLens-Report.txt";a.click();}} style={{padding:"8px 14px",borderRadius:"8px",border:"none",background:"linear-gradient(135deg,#10b981,#059669)",color:"white",fontSize:"12px",cursor:"pointer",fontWeight:"600"}}>⬇️ Download</button>
             </div>
-
+{showEmailBox && (
+  <div style={{background:"rgba(59,130,246,0.08)",border:"1px solid rgba(59,130,246,0.3)",borderRadius:"12px",padding:"16px",marginBottom:"20px"}}>
+    <p style={{color:"#93c5fd",fontSize:"13px",fontWeight:"600",margin:"0 0 10px"}}>📧 Send report to your email</p>
+    <div style={{display:"flex",gap:"8px"}}>
+      <input
+        type="email"
+        value={emailInput}
+        onChange={(e) => setEmailInput(e.target.value)}
+        placeholder="Enter your email address"
+        style={{flex:1,background:"rgba(0,0,0,0.3)",border:"1px solid #1f2937",borderRadius:"8px",padding:"10px 14px",color:"white",fontSize:"13px",outline:"none",fontFamily:"inherit"}}
+      />
+      <button
+        onClick={async () => {
+          if (!emailInput.trim()) return;
+          setEmailLoading(true); setEmailSuccess(false);
+          try {
+            const res = await fetch("/api/email", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: emailInput, contractType, riskScore, result }),
+            });
+            const data = await res.json();
+            if (data.success) { setEmailSuccess(true); setEmailInput(""); setTimeout(() => setEmailSuccess(false), 4000); }
+          } catch {}
+          finally { setEmailLoading(false); }
+        }}
+        disabled={emailLoading || !emailInput.trim()}
+        style={{padding:"10px 20px",borderRadius:"8px",border:"none",background:emailLoading?"#1f2937":"linear-gradient(135deg,#3b82f6,#6366f1)",color:emailLoading?"#6b7280":"white",fontSize:"13px",fontWeight:"700",cursor:emailLoading?"not-allowed":"pointer"}}
+      >
+        {emailLoading ? "Sending..." : "Send"}
+      </button>
+    </div>
+    {emailSuccess && <p style={{color:"#10b981",fontSize:"13px",fontWeight:"600",margin:"10px 0 0"}}>✅ Report sent! Check your inbox.</p>}
+  </div>
+)}
             {sections.map((section,i) => (
               <div key={i} style={{background:"rgba(255,255,255,0.02)",border:"1px solid #1f2937",borderLeft:`3px solid ${section.border}`,borderRadius:"12px",padding:"20px",marginBottom:"12px"}}>
                 <div style={{fontWeight:"700",fontSize:"15px",color:"#f9fafb",marginBottom:"12px",display:"flex",alignItems:"center",gap:"8px"}}>
@@ -1185,7 +1215,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── HISTORY TAB ── */}
+        {/* HISTORY TAB */}
         {activeTab==="history" && (
           <div>
             {history.length===0 ? (
