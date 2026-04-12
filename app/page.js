@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "@clerk/nextjs";
+
 const SAMPLE_CONTRACTS = {
   rental: {
     label: "🏠 Rental Agreement",
@@ -392,7 +392,6 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 export default function Home() {
-  const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
   const [contractText, setContractText] = useState("");
   const [result, setResult] = useState("");
@@ -428,11 +427,6 @@ const [showEmailBox, setShowEmailBox] = useState(false);
   const [showSamples2, setShowSamples2] = useState(false);
 
   const chatEndRef = useRef(null);
-useEffect(() => {
-  if (isLoaded && !isSignedIn) {
-    router.push("/sign-in");
-  }
-}, [isLoaded, isSignedIn, router]);
 
   useEffect(() => {
     const saved = localStorage.getItem("legallens-history");
@@ -446,13 +440,6 @@ useEffect(() => {
   useEffect(() => {
     setShowDisclaimer(true);
   }, []);
-if (!isLoaded || !isSignedIn) {
-    return (
-      <div style={{minHeight:"100vh",background:"#050914",display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <div style={{color:"#6b7280",fontSize:"16px"}}>Loading...</div>
-      </div>
-    );
-  }
   const acceptDisclaimer = () => {
     setShowDisclaimer(false);
   };
