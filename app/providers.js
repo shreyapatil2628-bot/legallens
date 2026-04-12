@@ -1,4 +1,3 @@
-"use client";
-export default function Providers({ children }) {
-  return <>{children}</>;
+export function Providers({ children }) {
+  return <>{children}</>
 }
