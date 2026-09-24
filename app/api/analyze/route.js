@@ -1,15 +1,9 @@
 import Groq from "groq-sdk";
 
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
 export async function POST(request) {
   try {
-    if (!process.env.GROQ_API_KEY) {
-      return Response.json(
-        { error: "GROQ_API_KEY is missing. Add it to .env.local and restart the server." },
-        { status: 500 }
-      );
-    }
-
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const { document, language } = await request.json();
 
     if (!document || document.trim().length < 50) {
@@ -58,7 +52,7 @@ Contract to analyze:
 ${document}`;
 
     const completion = await groq.chat.completions.create({
-      model: "openai/gpt-oss-120b",
+      model: "llama-3.3-70b-versatile",
       max_tokens: 2000,
       messages: [{ role: "user", content: prompt }],
     });

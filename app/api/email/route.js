@@ -1,12 +1,6 @@
 import { Resend } from "resend";
 
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request) {
   try {
@@ -34,16 +28,9 @@ export async function POST(request) {
       return match ? match[1].trim() : "Not found in document.";
     };
 
-    const tldr = escapeHtml(parseSection(result, "TL;DR"));
-    const risks = escapeHtml(parseSection(result, "RISKS IDENTIFIED"));
-    const suggestions = escapeHtml(parseSection(result, "SUGGESTIONS"));
-    const safeType = escapeHtml(contractType || "Unknown");
-
-    if (!process.env.RESEND_API_KEY) {
-      return Response.json({ fallback: "mailto" });
-    }
-
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const tldr = parseSection(result, "TL;DR");
+    const risks = parseSection(result, "RISKS IDENTIFIED");
+    const suggestions = parseSection(result, "SUGGESTIONS");
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -73,7 +60,7 @@ export async function POST(request) {
       <div style="display:inline-block;background:${getRiskColor(riskScore)}22;border:1px solid ${getRiskColor(riskScore)}44;border-radius:20px;padding:4px 16px;">
         <span style="color:${getRiskColor(riskScore)};font-size:13px;font-weight:700;">${getRiskLabel(riskScore)}</span>
       </div>
-      <p style="color:#6b7280;font-size:13px;margin:12px 0 0;">Contract Type: <strong style="color:#f9fafb;">${safeType}</strong></p>
+      <p style="color:#6b7280;font-size:13px;margin:12px 0 0;">Contract Type: <strong style="color:#f9fafb;">${contractType || "Unknown"}</strong></p>
     </div>
 
     <!-- TL;DR -->
