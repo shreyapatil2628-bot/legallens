@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { getSession, signOut } from "./lib/auth";
 
 const SAMPLE_CONTRACTS = {
   rental: {
@@ -412,9 +413,12 @@ export default function Home() {
   const [copySuccess, setCopySuccess] = useState(false);
   const [emailInput, setEmailInput] = useState("");
 const [emailLoading, setEmailLoading] = useState(false);
-const [emailSuccess, setEmailSuccess] = useState(false);
+const [emailMessage, setEmailMessage] = useState("");
+const [emailError, setEmailError] = useState("");
 const [showEmailBox, setShowEmailBox] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
+  const [sessionUser, setSessionUser] = useState(null);
 
   const [contract1, setContract1] = useState("");
   const [contract2, setContract2] = useState("");
@@ -437,6 +441,13 @@ const [showEmailBox, setShowEmailBox] = useState(false);
 
   // ✅ FIXED: Show disclaimer EVERY time the page loads
   useEffect(() => {
+    const session = getSession();
+    if (!session) {
+      window.location.replace("/login");
+      return;
+    }
+    setSessionUser(session);
+    setAuthReady(true);
     setShowDisclaimer(true);
   }, []);
 
@@ -686,6 +697,10 @@ const [showEmailBox, setShowEmailBox] = useState(false);
     { icon:"❓", title:"Your Key Questions Answered", heading:"USER QUESTIONS", border:"#3b82f6" },
   ];
 
+  if (!authReady) {
+    return <div style={{minHeight:"100vh",background:"#050914"}} />;
+  }
+
   return (
     <div style={{minHeight:"100vh",background:"#050914",color:"white",fontFamily:"'Segoe UI',sans-serif"}}>
 
@@ -719,6 +734,8 @@ const [showEmailBox, setShowEmailBox] = useState(false);
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
+          <span style={{fontSize:"12px",color:"#9ca3af"}}>{sessionUser?.name}</span>
+          <button onClick={() => { signOut(); window.location.href = "/login"; }} style={{fontSize:"12px",color:"#6b7280",background:"none",border:"none",cursor:"pointer"}}>Sign out</button>
           <button onClick={() => setShowDisclaimer(true)} style={{fontSize:"12px",color:"#6b7280",background:"none",border:"none",cursor:"pointer"}}>⚠️ Disclaimer</button>
           <a href="/landing" style={{fontSize:"12px",color:"#6b7280",textDecoration:"none"}}>About</a>
           <div style={{width:"8px",height:"8px",background:"#10b981",borderRadius:"50%"}}/>
@@ -798,10 +815,10 @@ const [showEmailBox, setShowEmailBox] = useState(false);
     </div>
     <div style={{flex:1}}>
       <div style={{fontSize:"14px",fontWeight:"600",color:"#f9fafb",marginBottom:"4px"}}>
-        {uploadLoading ? "Reading your file..." : "📸 Click to upload Photo of Contract"}
+        {uploadLoading ? "Reading your file..." : "Click to upload a PDF or a photo of the contract"}
       </div>
       <div style={{fontSize:"12px",color:"#6b7280"}}>
-        Take a clear photo of your contract and upload (JPG, PNG)
+        PDF, JPG, or PNG
       </div>
       {uploadStatus && (
         <div style={{fontSize:"12px",color:"#10b981",marginTop:"4px",fontWeight:"600"}}>
@@ -811,7 +828,7 @@ const [showEmailBox, setShowEmailBox] = useState(false);
     </div>
     <input
       type="file"
-      accept="image/*"
+      accept="application/pdf,image/*"
       style={{display:"none"}}
       disabled={uploadLoading}
       onChange={async (e) => {
@@ -1141,21 +1158,36 @@ const [showEmailBox, setShowEmailBox] = useState(false);
       <button
         onClick={async () => {
           if (!emailInput.trim()) return;
-          setEmailLoading(true); setEmailSuccess(false);
+          setEmailLoading(true);
+          setEmailMessage("");
+          setEmailError("");
           try {
             const res = await fetch("/api/email", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ email: emailInput, contractType, riskScore, result }),
             });
-            const data = await res.json();
-            if (data.success) {
-              setEmailSuccess(true);
+            const raw = await res.text();
+            let data = {};
+            try { data = JSON.parse(raw); } catch { data = { error: "Could not send the report." }; }
+            if (data.fallback === "mailto") {
+              const subject = `LegalLens report — ${contractType || "Contract"} — risk ${riskScore}/10`;
+              const body = `LegalLens contract analysis\n\n${result}`.slice(0, 1800);
+              const link = window.document.createElement("a");
+              link.href = `mailto:${emailInput.trim()}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+              link.click();
+              setEmailMessage("Your email app opened with the report. Send it from there.");
+            } else if (data.error) {
+              setEmailError(data.error);
+            } else if (data.success) {
+              setEmailMessage("Report sent. Check your inbox.");
               setEmailInput("");
-              setTimeout(() => setEmailSuccess(false), 4000);
             }
-          } catch {}
-          finally { setEmailLoading(false); }
+          } catch {
+            setEmailError("Could not send the report. Please try again.");
+          } finally {
+            setEmailLoading(false);
+          }
         }}
         disabled={emailLoading || !emailInput.trim()}
         style={{padding:"10px 20px",borderRadius:"8px",border:"none",background:emailLoading?"#1f2937":"linear-gradient(135deg,#3b82f6,#6366f1)",color:emailLoading?"#6b7280":"white",fontSize:"13px",fontWeight:"700",cursor:emailLoading?"not-allowed":"pointer"}}
@@ -1163,7 +1195,8 @@ const [showEmailBox, setShowEmailBox] = useState(false);
         {emailLoading ? "Sending..." : "Send"}
       </button>
     </div>
-    {emailSuccess && <p style={{color:"#10b981",fontSize:"13px",fontWeight:"600",margin:"10px 0 0"}}>✅ Report sent! Check your inbox.</p>}
+    {emailMessage && <p style={{color:"#10b981",fontSize:"13px",fontWeight:"600",margin:"10px 0 0"}}>{emailMessage}</p>}
+    {emailError && <p style={{color:"#fca5a5",fontSize:"13px",fontWeight:"600",margin:"10px 0 0"}}>{emailError}</p>}
   </div>
 )}
             {sections.map((section,i) => (

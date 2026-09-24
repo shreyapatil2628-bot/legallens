@@ -1,4 +1,45 @@
+import { createWorker } from "tesseract.js";
+import { PDFParse } from "pdf-parse";
+
 export const runtime = "nodejs";
+
+let workerPromise;
+
+function getOcrWorker() {
+  if (!workerPromise) {
+    workerPromise = createWorker("eng").catch((error) => {
+      workerPromise = null;
+      throw error;
+    });
+  }
+  return workerPromise;
+}
+
+async function readImageText(image) {
+  const worker = await getOcrWorker();
+  const { data } = await worker.recognize(image);
+  return (data.text || "").replace(/\s+\n/g, "\n").trim();
+}
+
+async function extractPdfText(buffer) {
+  const parser = new PDFParse({ data: new Uint8Array(buffer) });
+  try {
+    const result = await parser.getText();
+    const text = (result.text || "").replace(/--\s*\d+\s+of\s+\d+\s*--/g, "").trim();
+    if (text.length >= 50) return text;
+
+    const shots = await parser.getScreenshot({ scale: 2, first: 4, imageDataUrl: false });
+    const pages = [];
+    for (const page of shots.pages || []) {
+      if (!page.data) continue;
+      const pageText = await readImageText(Buffer.from(page.data));
+      if (pageText) pages.push(pageText);
+    }
+    return pages.join("\n\n").trim() || text;
+  } finally {
+    await parser.destroy();
+  }
+}
 
 export async function POST(request) {
   try {
@@ -9,15 +50,14 @@ export async function POST(request) {
       return Response.json({ error: "No file uploaded." }, { status: 400 });
     }
 
-    const fileType = file.type;
+    const fileType = file.type || "";
+    const fileName = typeof file.name === "string" ? file.name.toLowerCase() : "";
     const buffer = Buffer.from(await file.arrayBuffer());
+    const isPdf = fileType === "application/pdf" || fileName.endsWith(".pdf");
 
-    if (fileType === "application/pdf") {
+    if (isPdf) {
       try {
-        const pdf = await import("pdf-parse/lib/pdf-parse.js");
-        const pdfParse = pdf.default;
-        const data = await pdfParse(buffer);
-        const text = data.text.trim();
+        const text = await extractPdfText(buffer);
 
         if (!text || text.length < 50) {
           return Response.json({
@@ -34,33 +74,9 @@ export async function POST(request) {
       }
     }
 
-    if (fileType.startsWith("image/")) {
+    if (fileType.startsWith("image/") || /\.(jpe?g|png|webp|bmp|gif)$/.test(fileName)) {
       try {
-        const base64 = buffer.toString("base64");
-        const Groq = require("groq-sdk");
-        const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
-        const response = await groq.chat.completions.create({
-          model: "meta-llama/llama-4-scout-17b-16e-instruct",
-          max_tokens: 3000,
-          messages: [
-            {
-              role: "user",
-              content: [
-                {
-                  type: "image_url",
-                  image_url: { url: `data:${fileType};base64,${base64}` }
-                },
-                {
-                  type: "text",
-                  text: "This is an image of a legal contract. Please extract ALL the text from this image exactly as it appears. Return only the extracted text, nothing else."
-                }
-              ]
-            }
-          ]
-        });
-
-        const text = response.choices[0].message.content.trim();
+        const text = await readImageText(buffer);
 
         if (!text || text.length < 50) {
           return Response.json({
